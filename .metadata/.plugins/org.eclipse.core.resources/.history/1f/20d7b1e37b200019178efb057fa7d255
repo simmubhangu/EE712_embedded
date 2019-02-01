@@ -1,0 +1,16 @@
+/*
+ * switch_handler.h
+ *
+ *  Created on: 25-Jan-2019
+ *      Author: simmu
+ */
+
+#ifndef SWITCH_HANDLER_H_
+#define SWITCH_HANDLER_H_
+
+void switch_setup(void);
+
+
+
+
+#endif /* SWITCH_HANDLER_H_ */
