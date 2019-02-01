@@ -1,8 +1,0 @@
-IMPORT_FILES_AND_FOLDERS_RELATIVE=true
-IMPORT_FILES_AND_FOLDERS_TYPE=23,1
-PROBLEMS_FILTERS_MIGRATE=true
-eclipse.preferences.version=1
-org.eclipse.ui.internal.views.markers.CachedMarkerBuildercom.ti.ccstudio.project.ui.views.AdviceView=<?xml version\="1.0" encoding\="UTF-8"?>\n<filterGroups andFilters\="false" markerLimit\="100" markerLimitEnabled\="true">\n<filterGroup IMemento.internal.id\="Advice on Project" enabled\="false" filterLimit\="-1" scope\="3" workingSet\="Aggregate for window 1547045607066">\n<fieldFilter IMemento.internal.id\="org.eclipse.ui.ide.severityAndDescriptionField" containsModifier\="CONTAINS" containsText\="" selectedSeverities\="1"/>\n</filterGroup>\n</filterGroups>
-platformState=1547049381785
-quickStart=false
-tipsAndTricks=true
