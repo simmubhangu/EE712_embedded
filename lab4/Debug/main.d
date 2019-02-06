@@ -31,6 +31,7 @@ main.obj: /home/simmu/ti/TivaWare_C_Series-2.1.2.111/inc/hw_gpio.h
 main.obj: /home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/ssi.h
 main.obj: /home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/pin_map.h
 main.obj: ../lcd.h
+main.obj: ../adc_external.h
 
 ../main.c: 
 ../commonheader.h: 
@@ -63,3 +64,4 @@ main.obj: ../lcd.h
 /home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/ssi.h: 
 /home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/pin_map.h: 
 ../lcd.h: 
+../adc_external.h: 

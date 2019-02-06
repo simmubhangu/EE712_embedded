@@ -8,6 +8,7 @@ GEN_OPTS__FLAG :=
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
+"./adc_external.obj" \
 "./lcd.obj" \
 "./main.obj" \
 "./tm4c123gh6pm_startup_ccs.obj" \
@@ -155,8 +156,8 @@ lab4.hex: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "lcd.obj" "main.obj" "tm4c123gh6pm_startup_ccs.obj" 
-	-$(RM) "lcd.d" "main.d" "tm4c123gh6pm_startup_ccs.d" 
+	-$(RM) "adc_external.obj" "lcd.obj" "main.obj" "tm4c123gh6pm_startup_ccs.obj" 
+	-$(RM) "adc_external.d" "lcd.d" "main.d" "tm4c123gh6pm_startup_ccs.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

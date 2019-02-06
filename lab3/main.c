@@ -90,11 +90,12 @@ int main(void)
     do
     {
         sw1 = read_switch(read_sw1);
-        time_delay =0;
+
     }
     while (sw1 !=0x00);
         led_write(0x00);
         delay_measure = time_delay;
+        time_delay =0;
         lcd_command(0x01);
         led_write(0x00);
         lcd_cursor(1,2);
@@ -125,6 +126,7 @@ int main(void)
      }
      average_time = average_time/5;
      lcd_print(2,11,average_time,4);
+     SysCtlDelay(6700000);
 
  }
 

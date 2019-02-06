@@ -30,6 +30,8 @@ main.obj: /home/simmu/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/xloc
 main.obj: /home/simmu/ti/TivaWare_C_Series-2.1.2.111/inc/hw_gpio.h
 main.obj: /home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/ssi.h
 main.obj: /home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/pin_map.h
+main.obj: ../adc_external.h
+main.obj: ../lcd.h
 
 ../main.c: 
 ../commonheader.h: 
@@ -61,3 +63,5 @@ main.obj: /home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/pin_map.h
 /home/simmu/ti/TivaWare_C_Series-2.1.2.111/inc/hw_gpio.h: 
 /home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/ssi.h: 
 /home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/pin_map.h: 
+../adc_external.h: 
+../lcd.h: 

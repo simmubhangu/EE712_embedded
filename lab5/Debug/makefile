@@ -8,6 +8,8 @@ GEN_OPTS__FLAG :=
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
+"./adc_external.obj" \
+"./lcd.obj" \
 "./main.obj" \
 "./tm4c123gh6pm_startup_ccs.obj" \
 "/home/simmu/ti/TivaWare_C_Series-2.1.2.111/driverlib/ccs/Debug/driverlib.lib" \
@@ -154,8 +156,8 @@ lab5.hex: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "tm4c123gh6pm_startup_ccs.obj" 
-	-$(RM) "main.d" "tm4c123gh6pm_startup_ccs.d" 
+	-$(RM) "adc_external.obj" "lcd.obj" "main.obj" "tm4c123gh6pm_startup_ccs.obj" 
+	-$(RM) "adc_external.d" "lcd.d" "main.d" "tm4c123gh6pm_startup_ccs.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
