@@ -1,0 +1,480 @@
+TI ARM Assembler Unix v18.1.4 Fri Feb  8 17:45:49 2019
+
+Tools Copyright (c) 1996-2018 Texas Instruments Incorporated
+../alu_fucntion.asm                                                  PAGE    1
+
+       1                    ; main.asm
+       2                    ; Runs on LM4F120/TM4C123
+       3                    ; Test the GPIO initialization functions by setting the LED
+       4                    ; color according to the status of the switches.
+       5                    ; The Reflex Test (no longer supported; each LED turns others off):
+       6                    ; This program is functionally similar to SwitchTestMain.c
+       7                    ; in Switch_4F120asm.  When switch #1 is pressed, the blue
+       8                    ; LED comes on.  When switch #2 is pressed, the red LED
+       9                    ; comes on.  When both switches are pressed, the green LED
+      10                    ; comes on.  A short delay is inserted between
+      11                    ; polls of the buttons to compensate for your reflexes and
+      12                    ; the button bounce.  The following color combinations can
+      13                    ; be made:
+      14                    ; Color    LED(s) Illumination Method
+      15                    ; dark     ---    release both buttons
+      16                    ; red      R--    press right button (#2)
+      17                    ; blue     --B    press left button (#1)
+      18                    ; green    -G-    press both buttons exactly together
+      19                    ; yellow   RG-    press right button, then press left button
+      20                    ; sky blue -GB    press left button, then press right button
+      21                    ; white    RGB    press either button, then press the other
+      22                    ;                 button, then release the first button
+      23                    ; pink     R-B    press either button, then release the
+      24                    ;                 first button and immediately press the
+      25                    ;                 other button
+      26                    ; Daniel Valvano
+      27                    ; May 3, 2015
+      28                    
+      29                    ;  This example accompanies the book
+      30                    ;  "Embedded Systems: Introduction to ARM Cortex M Microcontrollers"
+      31                    ;  ISBN: 978-1469998749, Jonathan Valvano, copyright (c) 2015
+      32                    ;  Section 4.2    Program 4.1
+      33                    ;
+      34                    ;Copyright 2015 by Jonathan W. Valvano, valvano@mail.utexas.edu
+      35                    ;   You may use, edit, run or distribute this file
+      36                    ;   as long as the above copyright notice remains
+      37                    ;THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
+      38                    ;OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
+      39                    ;MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE.
+      40                    ;VALVANO SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
+      41                    ;OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
+      42                    ;For more information about my classes, my research, and my books, see
+      43                    ;http://users.ece.utexas.edu/~valvano/
+      44                    
+      45                    ; negative logic switch #2 connected to PF0 on the Launchpad
+      46                    ; red LED connected to PF1 on the Launchpad
+      47                    ; blue LED connected to PF2 on the Launchpad
+      48                    ; green LED connected to PF3 on the Launchpad
+      49                    ; negative logic switch #1 connected to PF4 on the Launchpad
+      50                    ; NOTE: The NMI (non-maskable interrupt) is on PF0.  That means that
+      51                    ; the Alternate Function Select, Pull-Up Resistor, Pull-Down Resistor,
+      52                    ; and Digital Enable are all locked for PF0 until a value of 0x4C4F434B
+      53                    ; is written to the Port F GPIO Lock Register.  After Port F is
+      54                    ; unlocked, bit 0 of the Port F GPIO Commit Register must be set to
+      55                    ; allow access to PF0's control registers.  On the LM4F120, the other
+TI ARM Assembler Unix v18.1.4 Fri Feb  8 17:45:49 2019
+
+Tools Copyright (c) 1996-2018 Texas Instruments Incorporated
+../alu_fucntion.asm                                                  PAGE    2
+
+      56                    ; bits of the Port F GPIO Commit Register are hard-wired to 1, meaning
+      57                    ; that the rest of Port F can always be freely re-configured at any
+      58                    ; time.  Requiring this procedure makes it unlikely to accidentally
+      59                    ; re-configure the JTAG and NMI pins as GPIO, which can lock the
+      60                    ; debugger out of the processor and make it permanently unable to be
+      61                    ; debugged or re-programmed.
+      62 00000000                  .thumb
+      63 00000000                  .text
+      64                           .align  2
+      65 00000000 400253FC  GPIO_PORTF_DATA_R  .field 0x400253FC,32         ;pin 2:9 of GPIODATA
+      66 00000004 40025400  GPIO_PORTF_DIR_R   .field 0x40025400,32
+      67 00000008 40025420  GPIO_PORTF_AFSEL_R .field 0x40025420,32
+      68 0000000c 40025510  GPIO_PORTF_PUR_R   .field 0x40025510,32
+      69 00000010 4002551C  GPIO_PORTF_DEN_R   .field 0x4002551C,32
+      70 00000014 40025520  GPIO_PORTF_LOCK_R  .field 0x40025520,32
+      71 00000018 40025524  GPIO_PORTF_CR_R    .field 0x40025524,32
+      72 0000001c 40025528  GPIO_PORTF_AMSEL_R .field 0x40025528,32
+      73 00000020 4002552C  GPIO_PORTF_PCTL_R  .field 0x4002552C,32
+      74 00000024 4C4F434B  GPIO_LOCK_KEY      .field 0x4C4F434B,32  ; Unlocks the GPIO_CR register
+      75          00000002  RED       .equ 0x02
+      76          00000004  BLUE      .equ 0x04
+      77          00000008  GREEN     .equ 0x08
+      78          00000010  SW1       .equ 0x10                 ; on the left side of the Launchpad board
+      79          00000001  SW2       .equ 0x01                 ; on the right side of the Launchpad board
+      80                    
+      81                    ;-----------------------------------------
+      82                    ;GPIO PORTA for switch
+      83 00000028 400043FC  GPIO_PORTA_DATA_R  .field 0x400043FC,32         ;pin 2:9 of GPIODATA
+      84 0000002c 40004400  GPIO_PORTA_DIR_R   .field 0x40004400,32
+      85 00000030 40004420  GPIO_PORTA_AFSEL_R .field 0x40004420,32
+      86 00000034 40004510  GPIO_PORTA_PUR_R   .field 0x40004510,32
+      87 00000038 4000451C  GPIO_PORTA_DEN_R   .field 0x4000451C,32
+      88 0000003c 40004520  GPIO_PORTA_LOCK_R  .field 0x40004520,32
+      89 00000040 40004524  GPIO_PORTA_CR_R    .field 0x40004524,32
+      90 00000044 40004528  GPIO_PORTA_AMSEL_R .field 0x40004528,32
+      91 00000048 4000452C  GPIO_PORTA_PCTL_R  .field 0x4000452C,32
+      92                    
+      93                    ;---------------------------------------------
+      94                    ;GPIO PORTB for LED
+      95 0000004c 400053FC  GPIO_PORTB_DATA_R  .field 0x400053FC,32         ;pin 2:9 of GPIODATA
+      96 00000050 40005400  GPIO_PORTB_DIR_R   .field 0x40005400,32
+      97 00000054 40005420  GPIO_PORTB_AFSEL_R .field 0x40005420,32
+      98 00000058 40005510  GPIO_PORTB_PUR_R   .field 0x40005510,32
+      99 0000005c 4000551C  GPIO_PORTB_DEN_R   .field 0x4000551C,32
+     100 00000060 40005520  GPIO_PORTB_LOCK_R  .field 0x40005520,32
+     101 00000064 40005524  GPIO_PORTB_CR_R    .field 0x40005524,32
+     102 00000068 40005528  GPIO_PORTB_AMSEL_R .field 0x40005528,32
+     103 0000006c 4000552C  GPIO_PORTB_PCTL_R  .field 0x4000552C,32
+     104                    
+     105                    
+     106 00000070 400FE608  SYSCTL_RCGCGPIO_R  .field 0x400FE608,32
+     107                    
+     108                          .global main
+     109                    
+     110                    main:  .asmfunc
+TI ARM Assembler Unix v18.1.4 Fri Feb  8 17:45:49 2019
+
+Tools Copyright (c) 1996-2018 Texas Instruments Incorporated
+../alu_fucntion.asm                                                  PAGE    3
+
+     111 00000074 FFFEF7FF!     BL  Ports_Init                  ; initialize input and output pins of Port F ; [KEEP 32-BIT INS]
+     112 00000078           loop
+     113 00000078 0300F04F      MOV R3, #0x00 ; [KEEP 32-BIT INS]
+     114 0000007c 0400F04F          MOV R4, #0x00 ; [KEEP 32-BIT INS]
+     115 00000080 484F          LDR R0, ONESEC                ; R0 = FIFTHSEC (delay 0.2 second) ; [ORIG 16-BIT INS]
+     116 00000082 FFFEF7FF!     BL  delay                       ; delay at least (3*R0) cycles ; [KEEP 32-BIT INS]
+     117                        ;MOV R2, #0x01
+     118                        ;BL  PortB_Output                ; turn LED-1 on
+     119                        ;LDR R0, FIFTHSEC                ; R0 = FIFTHSEC (delay 0.2 second)
+     120                        ;BL  delay
+     121                        ;MOV R2, #0x00
+     122                        ;BL  PortB_Output                ; read all of the switches on Port F
+     123                            ;B loop
+     124                    
+     125                    ; step-1
+     126 00000086 0208F04F          MOV R2, #0x08;                                  ; green on ; [KEEP 32-BIT INS]
+     127 0000008a FFFEF7FF!         BL PortF_Output ; [KEEP 32-BIT INS]
+     128                    
+     129 0000008e 484C              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     130 00000090 FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     131                    
+     132 00000094           swread
+     133 00000094 0208F04F          MOV R2, #0x08;                                  ; green on ; [KEEP 32-BIT INS]
+     134 00000098 FFFEF7FF!         BL PortF_Output ; [KEEP 32-BIT INS]
+     135                    
+     136 0000009c FFFEF7FF!         BL PortF_Input                          ;        sw2 status ; [KEEP 32-BIT INS]
+     137 000000a0 2A01              CMP R2, #0x01 ; [ORIG 16-BIT INS]
+     138 000000a2 D0F7              BEQ swread ; [ORIG 16-BIT INS]
+     139                    
+     140                    ; if switch pressed, following instruction will execute
+     141 000000a4 0200F04F          MOV R2, #0x00;                                  ; green off ; [KEEP 32-BIT INS]
+     142 000000a8 FFFEF7FF!         BL PortF_Output ; [KEEP 32-BIT INS]
+     143 000000ac 4844              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     144 000000ae FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     145                    
+     146 000000b2 FFFEF7FF!         BL PortA_Input                          ; read switch status of PORT A ; [KEEP 32-BIT INS]
+     147                    ;
+     148 000000b6 0292EA4F          LSR R2,#2 ; [KEEP 32-BIT INS]
+     149 000000ba 4313              ORRS R3,R3,R2 ; [ORIG 16-BIT INS]
+     150 000000bc 1303EA4F          LSL R3, #4 ; [KEEP 32-BIT INS]
+     151                    
+     152 000000c0 0401F104          ADD R4,#1 ; [KEEP 32-BIT INS]
+     153 000000c4 2C04              CMP R4,#0x04                    ; read status of switch 4 times ; [ORIG 16-BIT INS]
+     154 000000c6 D1E5              BNE swread ; [ORIG 16-BIT INS]
+     155 000000c8 1313EA4F          LSR R3,#4                               ; ; [KEEP 32-BIT INS]
+     156 000000cc BF00              NOP ; [ORIG 16-BIT INS]
+     157                    
+     158 000000ce 0400F04F          MOV R4,#0x00 ; [KEEP 32-BIT INS]
+     159 000000d2 4440F403          AND R4,R3,#0xC000               ; store operand ; [KEEP 32-BIT INS]
+     160                    
+     161 000000d6 3494EA4F          LSR R4,#14 ; [KEEP 32-BIT INS]
+     162                    
+     163 000000da 2C00              CMP R4,#0x00 ; [ORIG 16-BIT INS]
+     164 000000dc D005              BEQ copy ; [ORIG 16-BIT INS]
+     165                    
+TI ARM Assembler Unix v18.1.4 Fri Feb  8 17:45:49 2019
+
+Tools Copyright (c) 1996-2018 Texas Instruments Incorporated
+../alu_fucntion.asm                                                  PAGE    4
+
+     166 000000de 2C01              CMP R4,#0x01 ; [ORIG 16-BIT INS]
+     167 000000e0 D017              BEQ addition ; [ORIG 16-BIT INS]
+     168                    
+     169 000000e2 2C02              CMP R4,#0x02 ; [ORIG 16-BIT INS]
+     170 000000e4 D031              BEQ subtraction ; [ORIG 16-BIT INS]
+     171                    
+     172 000000e6 2C03              CMP R4,#0x03 ; [ORIG 16-BIT INS]
+     173 000000e8 D04C              BEQ multiply ; [ORIG 16-BIT INS]
+     174                    
+     175 000000ea           copy
+     176                    
+     177 000000ea 461A              MOV R2,R3 ; [ORIG 16-BIT INS]
+     178 000000ec FFFEF7FF!         BL PortB_Output ; [KEEP 32-BIT INS]
+     179                    
+     180 000000f0 4833              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     181 000000f2 FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     182 000000f6 4832          LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     183 000000f8 FFFEF7FF!     BL delay ; [KEEP 32-BIT INS]
+     184                    
+     185 000000fc 2212EA4F      LSR R2,#0x08 ; [KEEP 32-BIT INS]
+     186 00000100 FFFEF7FF!         BL PortB_Output ; [KEEP 32-BIT INS]
+     187                    
+     188 00000104 482E              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     189 00000106 FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     190 0000010a 482D              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     191 0000010c FFFEF7FF!     BL delay ; [KEEP 32-BIT INS]
+     192 00000110 E7EB              B copy ; [ORIG 16-BIT INS]
+     193                    
+     194 00000112           addition
+     195 00000112 461A              MOV R2,R3 ; [ORIG 16-BIT INS]
+     196 00000114 461E              MOV R6,R3 ; [ORIG 16-BIT INS]
+     197 00000116 067FF006          AND R6,#0x7F ; [KEEP 32-BIT INS]
+     198 0000011a 527EF402          AND R2,#0x3F80 ; [KEEP 32-BIT INS]
+     199 0000011e 12D2EA4F          LSR R2,#7 ; [KEEP 32-BIT INS]
+     200 00000122 4432              ADD R2,R2,R6 ; [ORIG 16-BIT INS]
+     201                    
+     202 00000124 FFFEF7FF!         BL PortB_Output ; [KEEP 32-BIT INS]
+     203                    
+     204 00000128 4825              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     205 0000012a FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     206 0000012e 4824              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     207 00000130 FFFEF7FF!     BL delay ; [KEEP 32-BIT INS]
+     208                    
+     209 00000134 2212EA4F      LSR R2,#0x08 ; [KEEP 32-BIT INS]
+     210 00000138 FFFEF7FF!         BL PortB_Output ; [KEEP 32-BIT INS]
+     211                    
+     212 0000013c 4820              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     213 0000013e FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     214 00000142 481F              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     215 00000144 FFFEF7FF!     BL delay ; [KEEP 32-BIT INS]
+     216                    
+     217 00000148 E7E3              B addition ; [ORIG 16-BIT INS]
+     218 0000014a           subtraction
+     219                    
+     220 0000014a 461A              MOV R2,R3 ; [ORIG 16-BIT INS]
+TI ARM Assembler Unix v18.1.4 Fri Feb  8 17:45:49 2019
+
+Tools Copyright (c) 1996-2018 Texas Instruments Incorporated
+../alu_fucntion.asm                                                  PAGE    5
+
+     221 0000014c 461E              MOV R6,R3 ; [ORIG 16-BIT INS]
+     222 0000014e 067FF006          AND R6,#0x7F ; [KEEP 32-BIT INS]
+     223 00000152 527EF402          AND R2,#0x3F80 ; [KEEP 32-BIT INS]
+     224 00000156 12D2EA4F          LSR R2,#7 ; [KEEP 32-BIT INS]
+     225 0000015a 0206EBA2          SUB R2,R2,R6 ; [KEEP 32-BIT INS]
+     226                    
+     227 0000015e FFFEF7FF!         BL PortB_Output ; [KEEP 32-BIT INS]
+     228                    
+     229 00000162 4817              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     230 00000164 FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     231 00000168 4815              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     232 0000016a FFFEF7FF!     BL delay ; [KEEP 32-BIT INS]
+     233                    
+     234 0000016e 2212EA4F      LSR R2,#0x08 ; [KEEP 32-BIT INS]
+     235 00000172 FFFEF7FF!         BL PortB_Output ; [KEEP 32-BIT INS]
+     236                    
+     237 00000176 4812              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     238 00000178 FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     239 0000017c 4810              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     240 0000017e FFFEF7FF!     BL delay ; [KEEP 32-BIT INS]
+     241                    
+     242 00000182 E7E2              B subtraction ; [ORIG 16-BIT INS]
+     243 00000184           multiply
+     244 00000184 461A              MOV R2,R3 ; [ORIG 16-BIT INS]
+     245 00000186 461E              MOV R6,R3 ; [ORIG 16-BIT INS]
+     246 00000188 067FF006          AND R6,#0x7F ; [KEEP 32-BIT INS]
+     247 0000018c 527EF402          AND R2,#0x3F80 ; [KEEP 32-BIT INS]
+     248 00000190 12D2EA4F          LSR R2,#7 ; [KEEP 32-BIT INS]
+     249 00000194 F206FB02          MUL R2,R2,R6 ; [KEEP 32-BIT INS]
+     250 00000198 FFFEF7FF!         BL PortB_Output ; [KEEP 32-BIT INS]
+     251                    
+     252 0000019c 4808              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     253 0000019e FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     254 000001a2 4807              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     255 000001a4 FFFEF7FF!     BL delay ; [KEEP 32-BIT INS]
+     256                    
+     257 000001a8 2212EA4F      LSR R2,#0x08 ; [KEEP 32-BIT INS]
+     258 000001ac FFFEF7FF!         BL PortB_Output ; [KEEP 32-BIT INS]
+     259                    
+     260 000001b0 4803              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     261 000001b2 FFFEF7FF!     BL  delay ; [KEEP 32-BIT INS]
+     262 000001b6 4802              LDR R0, ONESEC                ; R0 = ONESEC (delay 1 second) ; [ORIG 16-BIT INS]
+     263 000001b8 FFFEF7FF!     BL delay ; [KEEP 32-BIT INS]
+     264 000001bc E7E2              B multiply ; [ORIG 16-BIT INS]
+     265                    
+     266                        .endasmfunc
+     267                    ;------------delay------------
+     268                    ; Delay function for testing, which delays about 3*count cycles.
+     269                    ; Input: R0  count
+     270                    ; Output: none
+     271 000001c0 00516155  ONESEC             .field 5333333,32      ; approximately 1s delay at ~16 MHz clock
+     272 000001c4 00145855  QUARTERSEC         .field 1333333,32      ; approximately 0.25s delay at ~16 MHz clock
+     273 000001c8 001046AA  FIFTHSEC           .field 1066666,32      ; approximately 0.2s delay at ~16 MHz clock
+     274                    delay:  .asmfunc
+     275 000001cc 1E40          SUBS R0, R0, #1                 ; R0 = R0 - 1 (count = count - 1) ; [ORIG 16-BIT INS]
+TI ARM Assembler Unix v18.1.4 Fri Feb  8 17:45:49 2019
+
+Tools Copyright (c) 1996-2018 Texas Instruments Incorporated
+../alu_fucntion.asm                                                  PAGE    6
+
+     276 000001ce D1FD          BNE delay                       ; if count (R0) != 0, skip to 'delay' ; [ORIG 16-BIT INS]
+     277 000001d0 4770          BX  LR                          ; return ; [ORIG 16-BIT INS]
+     278                        .endasmfunc
+     279                    
+     280                    ;------------PortF_Init------------
+     281                    ; Initialize GPIO Port F for negative logic switches on PF0 and
+     282                    ; PF4 as the Launchpad is wired.  Weak internal pull-up
+     283                    ; resistors are enabled, and the NMI functionality on PF0 is
+     284                    ; disabled.  Make the RGB LED's pins outputs.
+     285                    ; Input: none
+     286                    ; Output: none
+     287                    ; Modifies: R0, R1, R2
+     288                    Ports_Init:  .asmfunc
+     289 000001d2 1164F85F      LDR R1, SYSCTL_RCGCGPIO_R       ; 1) activate clock for Port F , A, B ; [KEEP 32-BIT INS]
+     290 000001d6 6808          LDR R0, [R1] ; [ORIG 16-BIT INS]
+     291 000001d8 0023F040      ORR R0, R0, #0x23;               ; set bit 5,1,0 to turn on clock ; [KEEP 32-BIT INS]
+     292 000001dc 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     293 000001de BF00          NOP ; [ORIG 16-BIT INS]
+     294 000001e0 BF00          NOP                             ; allow time for clock to finish ; [ORIG 16-BIT INS]
+     295 000001e2 11D0F85F      LDR R1, GPIO_PORTF_LOCK_R       ; 2) unlock the lock register ; [KEEP 32-BIT INS]
+     296 000001e6 01C4F85F      LDR R0, GPIO_LOCK_KEY             ; unlock GPIO Port F Commit Register ; [KEEP 32-BIT INS]
+     297 000001ea 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     298                    
+     299                    ; CR_R
+     300 000001ec 11D8F85F      LDR R1, GPIO_PORTF_CR_R         ; enable commit for Port F ; [KEEP 32-BIT INS]
+     301 000001f0 00FFF04F      MOV R0, #0xFF                   ; 1 means allow access ; [KEEP 32-BIT INS]
+     302 000001f4 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     303 000001f6 11B8F85F      LDR R1, GPIO_PORTA_CR_R         ; enable commit for Port F ; [KEEP 32-BIT INS]
+     304 000001fa 00FFF04F      MOV R0, #0xFF                   ; 1 means allow access ; [KEEP 32-BIT INS]
+     305 000001fe 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     306 00000200 11A0F85F      LDR R1, GPIO_PORTB_CR_R         ; enable commit for Port F ; [KEEP 32-BIT INS]
+     307 00000204 00FFF04F      MOV R0, #0xFF                   ; 1 means allow access ; [KEEP 32-BIT INS]
+     308 00000208 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     309                    
+     310                    ; AMSEL
+     311 0000020a 11F0F85F      LDR R1, GPIO_PORTF_AMSEL_R      ; 3) disable analog functionality ; [KEEP 32-BIT INS]
+     312 0000020e 0000F04F      MOV R0, #0                      ; 0 means analog is off ; [KEEP 32-BIT INS]
+     313 00000212 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     314 00000214 11D4F85F      LDR R1, GPIO_PORTA_AMSEL_R      ; 3) disable analog functionality ; [KEEP 32-BIT INS]
+     315 00000218 0000F04F      MOV R0, #0                      ; 0 means analog is off ; [KEEP 32-BIT INS]
+     316 0000021c 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     317 0000021e 11B8F85F      LDR R1, GPIO_PORTB_AMSEL_R      ; 3) disable analog functionality ; [KEEP 32-BIT INS]
+     318 00000222 0000F04F      MOV R0, #0                      ; 0 means analog is off ; [KEEP 32-BIT INS]
+     319 00000226 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     320                    
+     321                    ;PCTL
+     322 00000228 120CF85F      LDR R1, GPIO_PORTF_PCTL_R       ; 4) configure as GPIO ; [KEEP 32-BIT INS]
+     323 0000022c 0000F04F      MOV R0, #0x00000000             ; 0 means configure Port F as GPIO ; [KEEP 32-BIT INS]
+     324 00000230 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     325 00000232 11ECF85F      LDR R1, GPIO_PORTA_PCTL_R       ; 4) configure as GPIO ; [KEEP 32-BIT INS]
+     326 00000236 0000F04F      MOV R0, #0x00000000             ; 0 means configure Port F as GPIO ; [KEEP 32-BIT INS]
+     327 0000023a 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     328 0000023c 11D4F85F      LDR R1, GPIO_PORTB_PCTL_R       ; 4) configure as GPIO ; [KEEP 32-BIT INS]
+     329 00000240 0000F04F      MOV R0, #0x00000000             ; 0 means configure Port F as GPIO ; [KEEP 32-BIT INS]
+     330 00000244 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+TI ARM Assembler Unix v18.1.4 Fri Feb  8 17:45:49 2019
+
+Tools Copyright (c) 1996-2018 Texas Instruments Incorporated
+../alu_fucntion.asm                                                  PAGE    7
+
+     331                    
+     332                    ; DIR
+     333 00000246 1244F85F      LDR R1, GPIO_PORTF_DIR_R        ; 5) set direction register of PORT F ; [KEEP 32-BIT INS]
+     334 0000024a 000EF04F      MOV R0,#0x0E                    ; PF0 and PF4 input, PF3-1 output ; [KEEP 32-BIT INS]
+     335 0000024e 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     336 00000250 1228F85F      LDR R1, GPIO_PORTA_DIR_R        ; 5) set direction register of PORT A ; [KEEP 32-BIT INS]
+     337 00000254 0000F04F      MOV R0,#0x00;                   ; PA2 to PA5 for 4 switches ; [KEEP 32-BIT INS]
+     338 00000258 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     339 0000025a 120CF85F      LDR R1, GPIO_PORTB_DIR_R        ; 5) set direction register of PORT B ; [KEEP 32-BIT INS]
+     340 0000025e 00FFF04F      MOV R0,#0xFF                    ; PB0 to PB7 for 8 LEDs ; [KEEP 32-BIT INS]
+     341 00000262 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     342                    
+     343                    ;AFSEL
+     344 00000264 1260F85F      LDR R1, GPIO_PORTF_AFSEL_R      ; 6) regular port function ; [KEEP 32-BIT INS]
+     345 00000268 0000F04F      MOV R0, #0                      ; 0 means disable alternate function ; [KEEP 32-BIT INS]
+     346 0000026c 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     347 0000026e 1240F85F      LDR R1, GPIO_PORTA_AFSEL_R      ; 6) regular port function ; [KEEP 32-BIT INS]
+     348 00000272 0000F04F      MOV R0, #0                      ; 0 means disable alternate function ; [KEEP 32-BIT INS]
+     349 00000276 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     350 00000278 1228F85F      LDR R1, GPIO_PORTB_AFSEL_R      ; 6) regular port function ; [KEEP 32-BIT INS]
+     351 0000027c 0000F04F      MOV R0, #0                      ; 0 means disable alternate function ; [KEEP 32-BIT INS]
+     352 00000280 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     353                    
+     354                    ;PUR
+     355 00000282 1278F85F      LDR R1, GPIO_PORTF_PUR_R        ; pull-up resistors for PF4,PF0 ; [KEEP 32-BIT INS]
+     356 00000286 0011F04F      MOV R0, #0x11                   ; enable weak pull-up on PF0 and PF4 ; [KEEP 32-BIT INS]
+     357 0000028a 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     358 0000028c 125CF85F      LDR R1, GPIO_PORTA_PUR_R        ; pull-up resistors for PA2 to PA5 ; [KEEP 32-BIT INS]
+     359 00000290 003CF04F      MOV R0, #0x3C                   ; enable weak pull-up on PA2 to PA5 ; [KEEP 32-BIT INS]
+     360 00000294 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     361                    
+     362                    ;DEN
+     363 00000296 1288F85F      LDR R1, GPIO_PORTF_DEN_R        ; 7) enable Port F digital port ; [KEEP 32-BIT INS]
+     364 0000029a 00FFF04F      MOV R0, #0xFF                   ; 1 means enable digital I/O ; [KEEP 32-BIT INS]
+     365 0000029e 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     366 000002a0 1248F85F      LDR R1, GPIO_PORTB_DEN_R        ; 7) enable Port B digital port ; [KEEP 32-BIT INS]
+     367 000002a4 00FFF04F      MOV R0, #0xFF                   ; 1 means enable digital I/O ; [KEEP 32-BIT INS]
+     368 000002a8 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     369 000002aa 1274F85F      LDR R1, GPIO_PORTA_DEN_R        ; 7) enable Port A digital port ; [KEEP 32-BIT INS]
+     370 000002ae 00FFF04F      MOV R0, #0xFF                   ; 1 means enable digital I/O ; [KEEP 32-BIT INS]
+     371 000002b2 6008          STR R0, [R1] ; [ORIG 16-BIT INS]
+     372                    
+     373 000002b4 4770          BX  LR ; [ORIG 16-BIT INS]
+     374                        .endasmfunc
+     375                    
+     376                    ;------------PortF_Input------------
+     377                    ; Read and return the status of the switches.
+     378                    ; Input: none
+     379                    ; Output: R0  0x01 if only Switch 1 is pressed
+     380                    ;         R0  0x10 if only Switch 2 is pressed
+     381                    ;         R0  0x00 if both switches are pressed
+     382                    ;         R0  0x11 if no switches are pressed
+     383                    ; Modifies: R1
+     384                    PortF_Input:  .asmfunc
+     385 000002b6 12B8F85F      LDR R1, GPIO_PORTF_DATA_R  ; pointer to Port F data ; [KEEP 32-BIT INS]
+TI ARM Assembler Unix v18.1.4 Fri Feb  8 17:45:49 2019
+
+Tools Copyright (c) 1996-2018 Texas Instruments Incorporated
+../alu_fucntion.asm                                                  PAGE    8
+
+     386 000002ba 680A          LDR R2, [R1]               ; read all of Port F ; [ORIG 16-BIT INS]
+     387 000002bc 0201F002      AND R2,R2,#0x01            ; just the input pins PF0 and PF4 ; [KEEP 32-BIT INS]
+     388 000002c0 4770          BX  LR                     ; return R0 with inputs ; [ORIG 16-BIT INS]
+     389                        .endasmfunc
+     390                    
+     391                    ;------------PortF_Output------------
+     392                    ; Set the output state of PF3-1.
+     393                    ; Input: R0  new state of PF
+     394                    ; Output: none
+     395                    ; Modifies: R1
+     396                    PortF_Output:  .asmfunc
+     397 000002c2 12C4F85F      LDR R1, GPIO_PORTF_DATA_R  ; pointer to Port F data ; [KEEP 32-BIT INS]
+     398 000002c6 600A          STR R2, [R1]               ; write to PF3-1 ; [ORIG 16-BIT INS]
+     399 000002c8 4770          BX  LR ; [ORIG 16-BIT INS]
+     400                        .endasmfunc
+     401                    
+     402                    ;------------PortA_Input------------
+     403                    ; Read and return the status of the switches.
+     404                    ; Input: none
+     405                    ; Output: R0  0x01 if only Switch 1 is pressed
+     406                    ;         R0  0x10 if only Switch 2 is pressed
+     407                    ;         R0  0x00 if both switches are pressed
+     408                    ;         R0  0x11 if no switches are pressed
+     409                    ; Modifies: R1
+     410                    
+     411                    PortA_Input:  .asmfunc
+     412 000002ca 12A4F85F      LDR R1, GPIO_PORTA_DATA_R  ; pointer to Port F data ; [KEEP 32-BIT INS]
+     413 000002ce 680A          LDR R2, [R1]               ; read all of Port F ; [ORIG 16-BIT INS]
+     414 000002d0 023CF002      AND R2,R2,#0x3C            ; just the input pins PA2 to PA5 ; [KEEP 32-BIT INS]
+     415 000002d4 4770          BX  LR                     ; return R0 with inputs ; [ORIG 16-BIT INS]
+     416                        .endasmfunc
+     417                    
+     418                    ;------------PortB_Output------------
+     419                    ; Set the output state of PB0-8.
+     420                    ; Input: R0  new state of PF
+     421                    ; Output: none
+     422                    ; Modifies: R1
+     423                    PortB_Output:  .asmfunc
+     424 000002d6 128CF85F      LDR R1, GPIO_PORTB_DATA_R  ; pointer to Port F data ; [KEEP 32-BIT INS]
+     425 000002da 600A          STR R2, [R1]               ; write to PF3-1 ; [ORIG 16-BIT INS]
+     426 000002dc 4770          BX  LR ; [ORIG 16-BIT INS]
+     427                        .endasmfunc
+     428                    
+     429                        .end                             ; end of file
+
+--------------------------
+Thumb2 Statistics
+--------------------------
+Number of Thumb2 ins converted to Thumb = 0 (0%)
+Number of Thumb ins in input = 82 (42%)
+Number of Thumb2 ins encoded as Thumb2 = 110 (100%)
+Number of Thumb2 ins converted to 2 OPND Thumb = 1
+
+
+No Assembly Errors, No Assembly Warnings
