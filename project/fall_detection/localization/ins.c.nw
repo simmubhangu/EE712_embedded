@@ -1,0 +1,131 @@
+% vim: set tabstop=8:softtabstop=4:shiftwidth=4:textwidth:78:formatoptions+=t
+\documentclass[11pt, a4paper]{article}
+\usepackage{noweb}
+\usepackage{amsmath}
+\usepackage{a4wide}  % Set margins automatically for wider use of A4
+
+% ----------
+% Margins
+% Left margin, odd pages: ("0.125" + 1)
+\setlength{\oddsidemargin}{0.125in}
+% Left margin, even pages: ("0.125" + 1)
+\setlength{\evensidemargin}{0.125in}
+% Text width 6.5 inch (so other margin is 1 inch).
+\setlength{\textwidth}{6.125in}
+% ----------
+
+\title{Routines For Indoor Localization}
+\author{EE712 Course Project}
+\begin{document}
+\maketitle
+
+<<boilerplate>>=
+#inlcude <stdio.h>
+#include <stdlib.h>
+
+// -----------------------------------------------------------------
+// This package defines:
+//
+//    fnVectorNorm  : Calculates norm of a vector
+//    fnDetectStill : Detect if the sensor is in still phase by
+//                    comparing with threshold value
+//    fnZuptVelocity: Estimate velocity by integrating the accelerometer
+//                    readings
+//
+// -----------------------------------------------------------------
+
+<<constants>>
+
+<<gyroNorm>>
+
+<<detectStill>>
+
+<<zuptVelocity>>
+
+<<estimateTheta>>
+
+@
+Routines to implement an indoor localization technique which use Inertial
+Sensor (accelro-gyro-magneto). Adaptive Zero Velocity Update is the preferred
+technique to correct the error which accumulates when integrating the
+accelerometer output to compute velocity.
+
+To apply adaptive zero velocity update, it is important to correctly detect
+the still-phase of the foot and this is done by carefully setting the
+threshold on the norm value of the gyro to detect zero-swing. This means
+that the device has to be placed where there is some swing
+
+Further, this threshold needs updating for different walking/running
+speeds. The update algorithm is beyond the scope of this project. Further
+as our device is designed for patients with limited mobility, it will be
+sufficient to assume a swing on the lower end of walking speed (< 4kmph)
+
+The steps to compute the velocity using ZUPT consists of the following:
+\begin{enumerate}
+\item Calculate norm (gyro)
+\item Detect still-phase by comparing norm with threshold value
+\item If not in still-phase, integrate accelerator output to get velocity
+\item In in still-phase, velocity = 0
+\item Integrate velocity to get position. This also includes figuring out
+      the direction using the gyro and magneto.
+\end{enumerate}
+
+The [[fnGyroNorm]] function computes the norm defined as:
+[
+   \sqrt{\omega_{x,k}^2+\omega_{y,k}^2+\omega_{z,k}^2}
+], where $\omega_{x,k}$ indicates the angular velocity along the $x$
+coordinate at the $k^{th}$ sampling instance.
+
+<<function vectorNorm>>=
+// Computes the norm of a vector
+float fnVectorNorm (float x, float y, float z) {
+   float xSq = x * x;
+   float ySq = y * y;
+   float zSq = z * z;
+
+   return (sqrtf (xSq+ySq+zSq));
+}
+
+@
+The function [[fnDetectStill]] detects the still-phase by comparing the norm
+of the angular velocity vector against a pre-determined threshold. The value
+of this threshold depends on the walking/running speed of the subject.
+
+<<global constants>>=
+// threshold value to detect still phase (deg/sec)
+float glStillPhaseThreshold = 0.01;
+
+<<function detectStill>>=
+bool fnDetectStill (float gyroNorm, float glStillPhaseThreshold) {
+   return (gyroNorm < glStillPhaseThreshold);
+}
+
+@
+The function [[fnZuptVelocity]] implements the zero-update algorithm to
+correct the velocity obtained from the accelerometer readings by using the
+still-phase to zero the velocity. It returns a new velocity value.
+
+\begin{itemize}
+\item [[ax, ay, az]] are the accelerometer readings after gravity corrections
+\item [[gx, gy, gz]] are the gyroscope readings
+\item [[vt]] is the current velocity
+\end{itemize}
+
+<<global constants>>=
+// Accelerator sampling duration (seconds)
+float glASamplingDuration = 0.01;
+
+<<function zuptVelocity>>=
+float fnZuptVelocity (
+      float ax, float ay, float az, float gx, float gy, float gz, float vt) {
+
+   float gyroNormValue = fnVectorNorm (gx, gy, gz);
+   float vnew = vt;
+   if (fnDetectstill (gyroNormValue)) return (0.0);
+   else {
+      vnew += glASamplingDuration * fnVectorNorm (ax, ay, az);
+   }
+}
+
+@
+\end{document}
