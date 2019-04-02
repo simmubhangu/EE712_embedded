@@ -1,12 +1,13 @@
-
 #include "Wire.h"
-
 // I2Cdev and HMC5883L must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
 #include "I2Cdev.h"
 #include "HMC5883L.h"
 #include "MPU6050.h"
 #include "helper_3dmath.h"
+#include<SoftwareSerial.h>
+
+SoftwareSerial bt(0,1); // uart0 of nano
 
 HMC5883L compass;
 MPU6050 mpu;
@@ -28,22 +29,47 @@ float acc[3];
 float gyro[3];
 float *filter_gyro;
 float *filter_acc ;
-char angle_threshold = 90;
-char fsm_state = "state_0";
-#define RAD_TO_DEG 57.2957786
+int angle_threshold = 75;
+int angle_threshold_n = -75;
+char *fsm_state = "state_0";
 
+float final_accumulative_value,final_roll,final_pitch;
+
+//#define RAD_TO_DEG 57.2957786
+int counter;
+
+void timer1_init(void)
+{
+  TIMSK1 =0x01;   //enable interrupts 1
+  
+  TCCR1A =0xc0;  // Timer 1 mode selection
+  TCCR1B =0x04;    //Timer 1 mode selection, prescalar selection
+  TCNT1H = 0xff ;  //Counter higher 8 bit value
+  TCNT1L = 0x00 ;  //Counter lower 8 bit value
+  TCCR1B =TCCR1B|0x40;   //start Timer
+}
+
+ISR(TIMER1_OVF_vect)        // interrupt service routine 
+{ 
+  TCNT1H = 0xff ;  //Counter higher 8 bit value
+  TCNT1L = 0x00 ;  //Counter lower 8 bit value
+  counter++;
+  //Serial.println(counter);
+  //fall_detection(final_accumulative_value,final_roll,final_pitch);
+}
 
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
+  timer1_init();
 
   // If you have GY-86 or GY-87 module.
   // To access HMC5883L you need to disable the I2C Master Mode and Sleep Mode, and enable I2C Bypass Mode
 
   while(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_16G))
   {
-    Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
+   // Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
     delay(500);
   }
 
@@ -52,7 +78,7 @@ void setup()
   mpu.setSleepEnabled(false);
 
   // Initialize Initialize HMC5883L
-  Serial.println("Initialize HMC5883L");
+  //Serial.println("Initialize HMC5883L");
   while (!compass.begin())
   {
     Serial.println("Could not find a valid HMC5883L sensor, check wiring!");
@@ -86,17 +112,20 @@ void get_MPU_data()
     gyro[1] = normgyro.YAxis;
     gyro[2] = normgyro.ZAxis;
 
-//    float final_value= sqrt(acc[0]*acc[0] + acc[1]*acc[1]+acc[2]*acc[2]);
-      //Serial.println(final_value-9.8);
+    final_accumulative_value= sqrt(acc[0]*acc[0] + acc[1]*acc[1]+acc[2]*acc[2]);
+//    Serial.println(final_value-9.8);
      ////////////////// filter data /////////////////////
     
     filter_acc = lowpassfilter(acc,5);
     filter_gyro = highpassfilter(gyro, 5);
     
     
-    float pitch = ComplementaryFilter_pitch(filter_acc[0],filter_acc[1],filter_acc[2],filter_gyro[0],filter_gyro[1],filter_gyro[2]);
-    float roll = ComplementaryFilter_roll(filter_acc[0],filter_acc[1],filter_acc[2],filter_gyro[0],filter_gyro[1],filter_gyro[2]);
-
+    final_pitch = ComplementaryFilter_pitch(filter_acc[0],filter_acc[1],filter_acc[2],filter_gyro[0],filter_gyro[1],filter_gyro[2]);
+    final_roll = ComplementaryFilter_roll(filter_acc[0],filter_acc[1],filter_acc[2],filter_gyro[0],filter_gyro[1],filter_gyro[2]);
+ 
+ //Serial.println(final_accumulative_value);
+ 
+    //fall_detection(final_accumulative_value,final_roll,final_pitch);
       
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +138,7 @@ float ComplementaryFilter_pitch(float ax,float ay,float az,float gx,float gy,flo
    //Serial.println(pitch);
    pitchAcc =atan(ax/squaresum)*RAD_TO_DEG;
    pitch =P_CompCoeff*pitch + (1.0f-P_CompCoeff)*pitchAcc;
-   Serial.println(pitch);
+  
   // delay(2)/;
    return pitch;
 }
@@ -122,13 +151,14 @@ float ComplementaryFilter_roll(float ax,float ay,float az,float gx,float gy,floa
    //Serial.println(pitch);
    rollAcc =atan(ay/sqrt(squaresum))*RAD_TO_DEG;
    roll =P_CompCoeff*roll + (1.0f-P_CompCoeff)*rollAcc;
-   Serial.println(roll);
+   //Serial.println(roll);
   // delay(2)/;
    return roll;
 }
 
  
 ////////////////////////////////Low pass filter for accelerlometer /////////////////////////////////////////
+
 float *lowpassfilter(float *input_, uint8_t f_cut) {
    
    float dT = (float)cycleTime * 0.000001f;
@@ -163,21 +193,100 @@ float *highpassfilter(float *input_gyro, uint8_t f_cut) {
   float *pt = output_gyro;
   return pt;
 }
-void fall_detection(float peak_value, float angle)
+
+bool check_direction(float angle)
 {
-  if (peak_value>=200 & fsm_state=="state_0")
+  for(int j=0;j<=10;j++)
+    {
+      if (angle <0)
+      {
+        return 0;
+      }
+      else
+      
+       return 1;
+     delay(10);
+    }
+}
+
+void fall_detection()
+{
+  //Serial.println(fsm_state);
+  if (final_accumulative_value >= 250 && fsm_state =="state_0")
   {
     Serial.println("state_1");
-    fsm_state = "state_1"; 
-    delay(100); 
+    fsm_state = "state_1";
+    counter=0;
+    do{
+      get_MPU_data();
+      Serial.println(final_roll);
+    }
+    while(counter <= 500);   
+      
+    Serial.println(final_roll);
+    //Serial.println(unsigned(roll_angle));
+    Serial.println(final_pitch);
   }
-
-  if ((fsm_state == "state_1") & ((angle_threshold +20 )> angle > (angle_threshold-20)))
+  if ((fsm_state == "state_1") && ((angle_threshold) < final_roll))
   {
     Serial.println("state_2");
     fsm_state = "state_2";
-  }
 
+    bool roll_dir = check_direction(final_roll);
+    if(roll_dir ==0)
+      {
+        Serial.println("forward fall");  
+      }
+    else
+    { 
+      Serial.println("back fall");  
+    }
+  }
+  
+  if ((fsm_state == "state_1") && ((angle_threshold) < (final_pitch)))
+  {
+    Serial.println("state_2");
+    fsm_state = "state_2";
+    bool pitch_dir = check_direction(final_pitch);
+    if(pitch_dir ==0)
+      {
+        Serial.println("right fall");  
+      }
+    else
+    {
+      Serial.println("left fall");
+    }
+  }
+    if ((fsm_state == "state_1") && ((angle_threshold_n) > final_roll))
+  {
+    Serial.println("state_2");
+    fsm_state = "state_2";
+
+    bool roll_dir = check_direction(final_roll);
+    if(roll_dir ==0)
+      {
+        Serial.println("forward fall");  
+      }
+    else
+    { 
+      Serial.println("back fall");  
+    }
+  }
+  
+  if ((fsm_state == "state_1") && ((angle_threshold_n) > (final_pitch)))
+  {
+    Serial.println("state_2");
+    fsm_state = "state_2";
+    bool pitch_dir = check_direction(final_pitch);
+    if(pitch_dir ==0)
+      {
+        Serial.println("right fall");  
+      }
+    else
+    {
+      Serial.println("left fall");
+    }
+  }
   else
   {
     fsm_state = "state_0";
@@ -189,4 +298,6 @@ void fall_detection(float peak_value, float angle)
 void loop()
 {
   get_MPU_data();
+  fall_detection();
+  
 }
