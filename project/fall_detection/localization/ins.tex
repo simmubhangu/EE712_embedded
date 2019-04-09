@@ -1,4 +1,4 @@
-% vim: set tabstop=8:softtabstop=4:shiftwidth=4:textwidth:78:formatoptions+=t
+% vim: set tabstop=8:softtabstop=4:shiftwidth=4:textwidth:78:formatoptions+=t% ===> this file was generated automatically by noweave --- better not edit it
 \documentclass[11pt, a4paper]{article}
 \usepackage{noweb}
 \usepackage{amsmath}
@@ -19,7 +19,7 @@
 \begin{document}
 \maketitle
 
-<<boilerplate>>=
+\nwfilename{ins.c.nw}\nwbegincode{1}\sublabel{NW469Jjs-To6Q8-1}\nwmargintag{{\nwtagstyle{}\subpageref{NW469Jjs-To6Q8-1}}}\moddef{boilerplate~{\nwtagstyle{}\subpageref{NW469Jjs-To6Q8-1}}}\endmoddef\nwstartdeflinemarkup\nwenddeflinemarkup
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -35,15 +35,15 @@
 //
 // -----------------------------------------------------------------
 
-<<global constants>>
+\LA{}global constants~{\nwtagstyle{}\subpageref{NW469Jjs-41E8u2-1}}\RA{}
 
-<<function fnVectorNorm>>
+\LA{}function fnVectorNorm~{\nwtagstyle{}\subpageref{NW469Jjs-uFbsF-1}}\RA{}
 
-<<function fnDetectStill>>
+\LA{}function fnDetectStill~{\nwtagstyle{}\subpageref{NW469Jjs-Mrblu-1}}\RA{}
 
-<<function fnZuptVelocity>>
+\LA{}function fnZuptVelocity~{\nwtagstyle{}\subpageref{NW469Jjs-QqJQw-1}}\RA{}
 
-@
+\nwnotused{boilerplate}\nwendcode{}\nwbegindocs{2}\nwdocspar
 Routines to implement an indoor localization technique which use Inertial
 Sensor (accelro-gyro-magneto). Adaptive Zero Velocity Update is the preferred
 technique to correct the error which accumulates when integrating the
@@ -69,7 +69,7 @@ The steps to compute the velocity using ZUPT consists of the following:
       the direction using the gyro and magneto.
 \end{enumerate}
 
-The [[fnVectorNorm]] function computes the norm of a vector. For example, 
+The {\Tt{}fnVectorNorm\nwendquote} function computes the norm of a vector. For example, 
 \[
    \sqrt{\omega_{x,k}^2+\omega_{y,k}^2+\omega_{z,k}^2}
 \],
@@ -77,71 +77,79 @@ The [[fnVectorNorm]] function computes the norm of a vector. For example,
 where $\omega_{x,k}$ indicates the angular velocity along the $x$
 coordinate at the $k^{th}$ sampling instance.
 
-<<function fnVectorNorm>>=
+\nwenddocs{}\nwbegincode{3}\sublabel{NW469Jjs-uFbsF-1}\nwmargintag{{\nwtagstyle{}\subpageref{NW469Jjs-uFbsF-1}}}\moddef{function fnVectorNorm~{\nwtagstyle{}\subpageref{NW469Jjs-uFbsF-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NW469Jjs-To6Q8-1}}\nwenddeflinemarkup
 // Computes the norm of a vector
-float fnVectorNorm (float x, float y, float z) {
+float fnVectorNorm (float x, float y, float z) \{
    float xSq = x * x;
    float ySq = y * y;
    float zSq = z * z;
 
    return (sqrtf (xSq+ySq+zSq));
-}
+\}
 
-@
-The function [[fnDetectStill]] detects the still-phase by comparing the norm
+\nwused{\\{NW469Jjs-To6Q8-1}}\nwendcode{}\nwbegindocs{4}\nwdocspar
+The function {\Tt{}fnDetectStill\nwendquote} detects the still-phase by comparing the norm
 of the angular velocity vector against a pre-determined threshold. The value
 of this threshold depends on the walking/running speed of the subject.
 
-<<global constants>>=
+\nwenddocs{}\nwbegincode{5}\sublabel{NW469Jjs-41E8u2-1}\nwmargintag{{\nwtagstyle{}\subpageref{NW469Jjs-41E8u2-1}}}\moddef{global constants~{\nwtagstyle{}\subpageref{NW469Jjs-41E8u2-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NW469Jjs-To6Q8-1}}\nwprevnextdefs{\relax}{NW469Jjs-41E8u2-2}\nwenddeflinemarkup
 // threshold value to detect still phase (deg/sec)
 float glStillPhaseThreshold = 0.01;
 
-<<function fnDetectStill>>=
+\nwalsodefined{\\{NW469Jjs-41E8u2-2}}\nwused{\\{NW469Jjs-To6Q8-1}}\nwendcode{}\nwbegincode{6}\sublabel{NW469Jjs-Mrblu-1}\nwmargintag{{\nwtagstyle{}\subpageref{NW469Jjs-Mrblu-1}}}\moddef{function fnDetectStill~{\nwtagstyle{}\subpageref{NW469Jjs-Mrblu-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NW469Jjs-To6Q8-1}}\nwenddeflinemarkup
 // Detects still phase by comparing the gyro-norm against a threshold
-int fnDetectStill (float gyroNorm) {
+int fnDetectStill (float gyroNorm) \{
    if (gyroNorm < glStillPhaseThreshold) return (1);
    else return (0);
    
-}
+\}
 
-@
-The function [[fnZuptVelocity]] implements the zero-update algorithm to
+\nwused{\\{NW469Jjs-To6Q8-1}}\nwendcode{}\nwbegindocs{7}\nwdocspar
+The function {\Tt{}fnZuptVelocity\nwendquote} implements the zero-update algorithm to
 correct the velocity obtained from the accelerometer readings by using the
 still-phase to zero the velocity. It returns a new velocity value.
 
 \begin{itemize}
-\item [[ax, ay, az]] are the accelerometer readings after gravity
+\item {\Tt{}ax,\ ay,\ az\nwendquote} are the accelerometer readings after gravity
 corrections, and low-pass filtering
-\item [[gx, gy, gz]] are the gyroscope readings after high-pass
+\item {\Tt{}gx,\ gy,\ gz\nwendquote} are the gyroscope readings after high-pass
 filtering
-\item [[vt]] is the current velocity
+\item {\Tt{}vt\nwendquote} is the current velocity
 \end{itemize}
 
-<<global constants>>=
+\nwenddocs{}\nwbegincode{8}\sublabel{NW469Jjs-41E8u2-2}\nwmargintag{{\nwtagstyle{}\subpageref{NW469Jjs-41E8u2-2}}}\moddef{global constants~{\nwtagstyle{}\subpageref{NW469Jjs-41E8u2-1}}}\plusendmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NW469Jjs-To6Q8-1}}\nwprevnextdefs{NW469Jjs-41E8u2-1}{\relax}\nwenddeflinemarkup
 // Accelerator sampling duration (seconds)
 float glASamplingDuration = 0.001;
 
-<<function fnZuptVelocity>>=
+\nwused{\\{NW469Jjs-To6Q8-1}}\nwendcode{}\nwbegincode{9}\sublabel{NW469Jjs-QqJQw-1}\nwmargintag{{\nwtagstyle{}\subpageref{NW469Jjs-QqJQw-1}}}\moddef{function fnZuptVelocity~{\nwtagstyle{}\subpageref{NW469Jjs-QqJQw-1}}}\endmoddef\nwstartdeflinemarkup\nwusesondefline{\\{NW469Jjs-To6Q8-1}}\nwenddeflinemarkup
 // Function to implement zero-update correction of the velocity values
 // obtained by integrating the accelro output
 float fnZuptVelocity (
-      float ax, float ay, float az, float gx, float gy, float gz, float vt) {
+      float ax, float ay, float az, float gx, float gy, float gz, float vt) \{
 
    float gyroNormValue = fnVectorNorm (gx, gy, gz);
    float vnew = vt;
    if (fnDetectStill (gyroNormValue) == 1) return (0.0);
-   else {
+   else \{
       vnew += glASamplingDuration * fnVectorNorm (ax, ay, az);
-   }
+   \}
 
    return (vnew);
-}
+\}
 
-@
+\nwused{\\{NW469Jjs-To6Q8-1}}\nwendcode{}\nwbegindocs{10}\nwdocspar
 Calculation of orientation of the body as it moves cannot be done by the gyro
 readings alone as over time the error due to bias accumulates. This variation
 in bias is due to the changing temperature of the gyroscope as it operates
 (this is low frequency noise). 
 
-@
+\nwenddocs{}
+
+\nwixlogsorted{c}{{boilerplate}{NW469Jjs-To6Q8-1}{\nwixd{NW469Jjs-To6Q8-1}}}%
+\nwixlogsorted{c}{{function fnDetectStill}{NW469Jjs-Mrblu-1}{\nwixu{NW469Jjs-To6Q8-1}\nwixd{NW469Jjs-Mrblu-1}}}%
+\nwixlogsorted{c}{{function fnVectorNorm}{NW469Jjs-uFbsF-1}{\nwixu{NW469Jjs-To6Q8-1}\nwixd{NW469Jjs-uFbsF-1}}}%
+\nwixlogsorted{c}{{function fnZuptVelocity}{NW469Jjs-QqJQw-1}{\nwixu{NW469Jjs-To6Q8-1}\nwixd{NW469Jjs-QqJQw-1}}}%
+\nwixlogsorted{c}{{global constants}{NW469Jjs-41E8u2-1}{\nwixu{NW469Jjs-To6Q8-1}\nwixd{NW469Jjs-41E8u2-1}\nwixd{NW469Jjs-41E8u2-2}}}%
+\nwbegindocs{11}\nwdocspar
 \end{document}
+\nwenddocs{}
