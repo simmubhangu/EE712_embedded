@@ -113,18 +113,33 @@ void get_MPU_data()
     gyro[2] = normgyro.ZAxis;
 
     final_accumulative_value= sqrt(acc[0]*acc[0] + acc[1]*acc[1]+acc[2]*acc[2]);
-//    Serial.println(final_value-9.8);
+
      ////////////////// filter data /////////////////////
     
-    filter_acc = lowpassfilter(acc,5);
-    filter_gyro = highpassfilter(gyro, 5);
-    
+    filter_acc = lowpassfilter(acc,20);
+    filter_gyro = highpassfilter(gyro, 20);
+    Serial.print("Raw_acc_X: "); Serial.print(acc[0]); Serial.print("  ");
+    Serial.print("Raw_acc_Y: "); Serial.print(acc[1]); Serial.print("  ");
+    Serial.print("Raw_acc_Y: "); Serial.print(acc[2]); Serial.print("  ");
+    Serial.print("Raw_gyro_X: "); Serial.print(gyro[0]); Serial.print("  ");
+    Serial.print("Raw_gyro_Y: "); Serial.print(gyro[1]); Serial.print("  ");
+    Serial.print("Raw_gyro_Y: "); Serial.print(gyro[2]); Serial.print("  ");
+    Serial.print("Raw_acc_X_f: "); Serial.print(filter_acc[0]); Serial.print("  ");
+    Serial.print("Raw_acc_Y_f: "); Serial.print(filter_acc[1]); Serial.print("  ");
+    Serial.print("Raw_acc_Y_f: "); Serial.print(filter_acc[2]); Serial.print("  ");
+    Serial.print("Raw_gyro_X_f: "); Serial.print(filter_gyro[0]); Serial.print("  ");
+    Serial.print("Raw_gyro_Y_f: "); Serial.print(filter_gyro[1]); Serial.print("  ");
+    Serial.print("Raw_gyro_Y_f: "); Serial.print(filter_gyro[2]); Serial.print("  ");
+    //Serial.println("uT");
     
     final_pitch = ComplementaryFilter_pitch(filter_acc[0],filter_acc[1],filter_acc[2],filter_gyro[0],filter_gyro[1],filter_gyro[2]);
     final_roll = ComplementaryFilter_roll(filter_acc[0],filter_acc[1],filter_acc[2],filter_gyro[0],filter_gyro[1],filter_gyro[2]);
  
  //Serial.println(final_accumulative_value);
- 
+ Serial.print("final: "); Serial.print(final_accumulative_value); Serial.print("  ");
+ Serial.print("Pitch: "); Serial.print(final_pitch); Serial.print("  ");
+ Serial.print("roll: "); Serial.print(final_roll); Serial.print("  ");
+ Serial.println(" ");
     //fall_detection(final_accumulative_value,final_roll,final_pitch);
       
 }
@@ -298,6 +313,6 @@ void fall_detection()
 void loop()
 {
   get_MPU_data();
-  fall_detection();
+  //fall_detection();
   
 }
