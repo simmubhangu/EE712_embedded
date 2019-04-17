@@ -100,14 +100,20 @@ Our hardware setup consists of four major components:
 \subsection{Block Diagram}
 
 \subsection{I2C and UART Integration}
-\begin{figure}
+The I2C is used to integrate the GY-87 with the ATmega328P. The GY-87 behaves
+as a slave. 
+
+\begin{figure}[htb]
     \centering
     \includegraphics[width=\linewidth]{I2C_Timing.pdf}
     \caption{I2C Data Transfer}
     \label{fig:i2c_timing}
 \end{figure}
 
-\begin{figure}
+\noindent The HC05 communicates with via a UART interface which is run at a
+baud rate of 9600 baud.
+
+\begin{figure}[htb]
     \centering
     \includegraphics[width=\linewidth]{UART_Timing.pdf}
     \caption{UART Data Transfer}
@@ -115,6 +121,28 @@ Our hardware setup consists of four major components:
 \end{figure}
 
 \subsection{GY87 Calibration and Integration}
+Two experiments were conducted on the GY87 to calibrate it prior to
+integration.
+
+\subsubsection{Cube-mounted Measurements}
+The GY-87 was mounted along the face of a thermocol cube. The cube itself was
+placed on the surface of a flat table. The readings along the axis aligned to
+the earth's gravitation field were verified to be as close to $\pm g$. This
+experiment was repeated aligning each axis with g. The following readings were
+recorded:
+
+\begin{center}
+   \begin{tabular}{llll}
+      \hline
+      Alignment Axis & A$_{x}$ & A$_{y}$ & A$_{z}$\\
+      \hline
+      X-Axis & $-9.8$ & $0.0$ & $0.0$ \\
+      Y-Axis & $0.0$ & $-9.8$ & $0.0$ \\
+      Z-Axis & $0.0$ & $0.0$ & $-9.8$ \\
+      \hline
+   \end{tabular}
+\end{center}
+
 
 \subsection{Power Supply}
 How long do we expect a rechargable 9V cell to last? What is the current
@@ -128,7 +156,47 @@ Flow diagram: sampling, lpf, hpf, complementary.
 
 
 \section{Test Procedure}
-Need to ask PCP on an acceptable test setup.
+We tested the device both with normal movements, such as walking, sitting,
+jumping and sleeping. The tests also included transitions between these
+movements as the transition points were more interesting from our
+application's point-of-view. The following are plots of {\color{red}
+something, something and something-else} for each movement.
+
+\noindent Wearer walked at a normal pace during this test. 
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{I2C_Timing.pdf}
+    \caption{Plot: Walking}
+    \label{fig:walking}
+\end{figure}
+
+\noindent This test was conducted when the wearer sat into a short chair from a
+standing position and stood up again.
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{I2C_Timing.pdf}
+    \caption{Plot: Sitting-Standing}
+    \label{fig:sitting_standing}
+\end{figure}
+
+\noindent This test was conducted when the wearer was jumping in place. This
+action most closely resembles a fall, and the test was conducted to ensure our
+thresholding was correct.
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{I2C_Timing.pdf}
+    \caption{Plot: Jumping}
+    \label{fig:jumping}
+\end{figure}
+
+\noindent This test was conducted when the wearer was lying down and suddenly
+got up.
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{I2C_Timing.pdf}
+    \caption{Plot: Sleeping-Waking}
+    \label{fig:sleeping}
+\end{figure}
 
 \section{Test Results}
 with plots and tables (appendices, if necessary).
