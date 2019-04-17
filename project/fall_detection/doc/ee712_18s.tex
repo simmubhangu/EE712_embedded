@@ -97,7 +97,13 @@ Our hardware setup consists of four major components:
       wearable.
 \end{description}
 
-\subsection{Block Diagram}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\linewidth]{BD.pdf}
+    \caption{Block Diagram}
+    \label{fig:blk_diagram}
+\end{figure}
+
 
 \subsection{I2C and UART Integration}
 The I2C is used to integrate the GY-87 with the ATmega328P. The GY-87 behaves
@@ -145,8 +151,28 @@ recorded:
 
 
 \subsection{Power Supply}
-How long do we expect a rechargable 9V cell to last? What is the current
-drawn under normal usage?
+During development the assembly was powered using the micro-usb connection to
+the Arduino-Nano. Once we assembled the device as a wearable, we were using a
+9V cell with a capacity of 400 mAH to power the device. The following table
+lists the different devices and their peak current consumption:
+
+\begin{center}
+   \begin{tabular}{llll}
+      \hline
+      Device & Current Drawn (mA) \\
+      \hline
+      Arduino Nano & $2.4$ \\
+      GY-87 Sensors & $3.9$ \\
+      LEDs (4) & $16.0$ & \\
+      HC-05 & $30.0$ \\
+      \hline
+      Total & $53.3$ \\
+      \hline
+   \end{tabular}
+\end{center}
+
+\noindent So, the device can draw a peak current of $53.3$ mA. At this
+consumption, a 9V cell will last for about $7.50$ hours.
 
 \section{Software}
 Algorithm.
