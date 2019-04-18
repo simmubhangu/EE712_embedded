@@ -23,7 +23,10 @@
 \pagestyle{plain}
 \def\title{Human Fall Detection}
 \def\what{EE712 Embedded System Design}
-\def\who{Simranjeet Singh (183076005) (183076005@iitb.ac.in) \\ Sonali Shukla (184070014) (184070014@iitb.ac.in) \\ Niraj N Sharma (184077001) (nirajns@iitb.ac.in) \\ Group 20}
+\def\who{Simranjeet Singh (183076005) [183076005@iitb.ac.in] \\
+Sonali Shukla (184070014) [184070014@iitb.ac.in] \\
+Niraj N Sharma (184077001) [nirajns@iitb.ac.in] \\
+Group 20}
 \def\guide{Prof.~P.~C.~Pandey \& Prof.~D.~K.~Sharma}
 \titlpage
 \newpage
@@ -54,17 +57,18 @@ caregiver.
 techniques which includes wearable based detection as well as detection
 using ambient and vision sensors. Wearable based detection increasingly
 gravitate towards accelerometer based techniques due to lower costs and
-power efficiency of mems-based accelerometers. Accelerometer-based techniques usually consist of detecting a sudden change in the
-acclerator output due to the fall-event.
+power efficiency of mems-based accelerometers. Accelerometer-based techniques
+usually consist of detecting a sudden change in the acclerator output due to
+the fall-event.
 
-\cite{Bourke2011} discusses appropriate filtering techniques to estimate
-the vertical acceleration vector from a tri-axial accelerometer. The
-readings from a tri-axial accelerometer cannot be used directly as they
-tend to be very noisy and are also combined with the acceleration due to
-the earth's gravity.
+\noindent \cite{Bourke2011} discusses appropriate filtering techniques to
+estimate the vertical acceleration vector from a tri-axial accelerometer. The
+readings from a tri-axial accelerometer cannot be used directly as they tend
+to be very noisy and are also combined with the acceleration due to the
+earth's gravity.
 
-\cite{Wu2015} uses a threshold based technique combining readings from
-the accelerometer and gyroscope to detect the fall-event.
+\noindent \cite{Wu2015} uses a threshold based technique combining readings
+from the accelerometer and gyroscope to detect the fall-event.
 
 \section{Approach}
 The idea is to use the I2C interface to interface a GY-87 sensor to the
@@ -72,13 +76,14 @@ Arduino Nano's micro-controller. The GY-87 provides separate readings for each
 axes of the accelerator and gyroscope sensors. These six separate readings are
 combined using a complementary filter. Our fall detection algorithm works on
 the output of the complementary filter, by identifying a fall when the values
-cross a certain preset threshold. We then experimented with various regular
-movements like walking, running (slowly), climbing stairs, sitting and
-sleeping to find an appropriate threshold value below which a fall should not
-be detected. In addition to comparing the combined accelro-gyro output against
-the threshold, we also use declare that a fall has been detected only when the
-gyroscope indicates that the orientation of the device has changed by at least
-60 degrees.
+cross a certain preset threshold.
+
+\noindent We then experimented with various regular movements like walking,
+running (slowly), climbing stairs, sitting and sleeping to find an appropriate
+threshold value below which a fall should not be detected. In addition to
+comparing the combined accelro-gyro output against the threshold, we also use
+declare that a fall has been detected only when the gyroscope indicates that
+the orientation of the device has changed by at least 60 degrees.
 
 \section{Hardware Setup}
 Our hardware setup consists of four major components as show in
@@ -142,20 +147,7 @@ integration.
 The GY-87 was mounted along the face of a thermocol cube. The cube itself was
 placed on the surface of a flat table. The readings along the axis aligned to
 the earth's gravitation field were verified to be as close to $\pm g$. This
-experiment was repeated aligning each axis with g. The following readings were
-recorded:
-
-\begin{center}
-   \begin{tabular}{llll}
-      \hline
-      Alignment Axis & A$_{x}$ & A$_{y}$ & A$_{z}$\\
-      \hline
-      X-Axis & $-9.8$ & $0.0$ & $0.0$ \\
-      Y-Axis & $0.0$ & $-9.8$ & $0.0$ \\
-      Z-Axis & $0.0$ & $0.0$ & $-9.8$ \\
-      \hline
-   \end{tabular}
-\end{center}
+experiment was repeated aligning each axis with g.
 
 \subsubsection{Pendulum-mounted Measurements}
 We attached the GY-87 to the arm of a pendulum and swung it, while measuring
@@ -192,10 +184,10 @@ processing which occurs with the accelerometer and gyroscope sensor readings
 from the GY-87. The input from the two sensors are received as a set of six,
 16-bit values, one for each axis of each sensor. 
 
-The accelerometer values are taken through a LPF, while the gyroscope values
-are taken through a HPF. These filtered values are then combined using a
-complementary filter which essentially does a weighted sum of the sensor
-values.
+\noindent The accelerometer values are taken through a LPF, while the
+gyroscope values are taken through a HPF. These filtered values are then
+combined using a complementary filter which essentially does a weighted sum of
+the sensor values.
 
 \begin{figure}[htb]
     \centering
@@ -212,14 +204,14 @@ movements as the transition points were more interesting from our
 application's point-of-view. The following are plots of everyday actions
 like jogging, walking, sitting, sleeping.
 
-In all these plots, the blue plot indicates filtered accelero output.
-The red and green plots indicate roll and pitch.
+\noindent In all these plots, the blue plot indicates filtered accelero
+output.  The red and green plots indicate roll and pitch.
 
 \noindent In the walk test, the wearer walked at a normal pace during this
 test. The plot is on figure~\ref{fig:walk} on page~\pageref{fig:walk}.
 \begin{figure}
     \centering
-    \includegraphics[width=0.75\linewidth]{walk.png}
+    \includegraphics[width=0.7\linewidth]{walk.png}
     \caption{Walking}
     \label{fig:walk}
 \end{figure}
@@ -229,7 +221,7 @@ standing position and stood up again. The plot is on figure~\ref{fig:ss} on page
 ~\pageref{fig:ss}.
 \begin{figure}
     \centering
-    \includegraphics[width=0.75\linewidth]{sit-stand.png}
+    \includegraphics[width=0.7\linewidth]{sit-stand.png}
     \caption{Sitting-Standing}
     \label{fig:ss}
 \end{figure}
@@ -240,7 +232,7 @@ thresholding was correct. The plot is on figure~\ref{fig:jumping} on page
 ~\pageref{fig:jumping}.
 \begin{figure}
     \centering
-    \includegraphics[width=0.75\linewidth]{jump.png}
+    \includegraphics[width=0.70\linewidth]{jump.png}
     \caption{Jumping}
     \label{fig:jumping}
 \end{figure}
@@ -249,7 +241,7 @@ thresholding was correct. The plot is on figure~\ref{fig:jumping} on page
 got up. The plot is on figure~\ref{fig:sleeping} on page ~\pageref{fig:sleeping}.
 \begin{figure}
     \centering
-    \includegraphics[width=0.75\linewidth]{sleep.png}
+    \includegraphics[width=0.7\linewidth]{sleep.png}
     \caption{Sleeping-Waking}
     \label{fig:sleeping}
 \end{figure}
@@ -259,8 +251,8 @@ We have implemented a device which detects if the wearer has had a fall, and
 classifies the fall direction -- front, back, right or left. This information
 is communicated via Bluetooth to the wearer's smartphone.
 
-One limitation of this device is that orientation of the device has to be
-fixed with respect to the wearer.  A future improvement could be for the
+\noindent A limitation of this device is that orientation of the device has
+to be fixed with respect to the wearer.  A future improvement could be for the
 device to automatically calibrate its current orientation with respect to a
 preset reference. This would allow the wearer greater flexibility in device
 placement.
