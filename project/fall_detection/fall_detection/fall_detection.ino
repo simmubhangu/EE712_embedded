@@ -12,6 +12,7 @@ SoftwareSerial bt(0,1); // uart0 of nano
 HMC5883L compass;
 MPU6050 mpu;
 
+
 #define delta_t .01
 float pitch=0;
 float pitchAcc;
@@ -20,6 +21,7 @@ float rollAcc;
 float P_CompCoeff= 0.5;
 float yaw=0;
 float output_[3];
+float a[100];
 float output_gyro[3];
 float prev_output[3];
 float prev_output_gyro[3];
@@ -29,8 +31,8 @@ float acc[3];
 float gyro[3];
 float *filter_gyro;
 float *filter_acc ;
-int angle_threshold = 75;
-int angle_threshold_n = -75;
+int angle_threshold = 60;
+int angle_threshold_n = -60;
 char *fsm_state = "state_0";
 
 float final_accumulative_value,final_roll,final_pitch;
@@ -81,7 +83,7 @@ void setup()
   //Serial.println("Initialize HMC5883L");
   while (!compass.begin())
   {
-    Serial.println("Could not find a valid HMC5883L sensor, check wiring!");
+    //Serial.println("Could not find a valid HMC5883L sensor, check wiring!");
     delay(500);
   }
 
@@ -100,7 +102,8 @@ void setup()
   // Set calibration offset. See HMC5883L_calibration.ino
   compass.setOffset(0, 0); 
 }
-void get_MPU_data()
+
+float get_basic()
 {
   Vector normAccel = mpu.readNormalizeAccel();
   Vector normgyro = mpu.readNormalizeGyro();
@@ -112,34 +115,51 @@ void get_MPU_data()
     gyro[1] = normgyro.YAxis;
     gyro[2] = normgyro.ZAxis;
 
-    final_accumulative_value= sqrt(acc[0]*acc[0] + acc[1]*acc[1]+acc[2]*acc[2]);
+    float final_val= sqrt(acc[0]*acc[0] + acc[1]*acc[1]+acc[2]*acc[2]);
+//    Serial.print("final_value: "); Serial.print(final_val);
+//    Serial.println(" ");
+    return final_val;
+}
+void get_MPU_data()
+{
+//  Vector normAccel = mpu.readNormalizeAccel();
+//  Vector normgyro = mpu.readNormalizeGyro();
+//
+//    acc[0] = normAccel.XAxis;
+//    acc[1] = normAccel.YAxis;
+//    acc[2] = normAccel.ZAxis;
+//    gyro[0] = normgyro.XAxis;
+//    gyro[1] = normgyro.YAxis;
+//    gyro[2] = normgyro.ZAxis;
+
+    final_accumulative_value= get_basic();
 
      ////////////////// filter data /////////////////////
     
     filter_acc = lowpassfilter(acc,20);
     filter_gyro = highpassfilter(gyro, 20);
-    Serial.print("Raw_acc_X: "); Serial.print(acc[0]); Serial.print("  ");
-    Serial.print("Raw_acc_Y: "); Serial.print(acc[1]); Serial.print("  ");
-    Serial.print("Raw_acc_Y: "); Serial.print(acc[2]); Serial.print("  ");
-    Serial.print("Raw_gyro_X: "); Serial.print(gyro[0]); Serial.print("  ");
-    Serial.print("Raw_gyro_Y: "); Serial.print(gyro[1]); Serial.print("  ");
-    Serial.print("Raw_gyro_Y: "); Serial.print(gyro[2]); Serial.print("  ");
-    Serial.print("Raw_acc_X_f: "); Serial.print(filter_acc[0]); Serial.print("  ");
-    Serial.print("Raw_acc_Y_f: "); Serial.print(filter_acc[1]); Serial.print("  ");
-    Serial.print("Raw_acc_Y_f: "); Serial.print(filter_acc[2]); Serial.print("  ");
-    Serial.print("Raw_gyro_X_f: "); Serial.print(filter_gyro[0]); Serial.print("  ");
-    Serial.print("Raw_gyro_Y_f: "); Serial.print(filter_gyro[1]); Serial.print("  ");
-    Serial.print("Raw_gyro_Y_f: "); Serial.print(filter_gyro[2]); Serial.print("  ");
+   // Serial.print("Raw_acc_X: "); Serial.print(acc[0]); Serial.print("  ");
+ //   Serial.print("Raw_acc_Y: "); Serial.print(acc[1]); Serial.print("  ");
+//    Serial.print("Raw_acc_z: "); Serial.print(acc[2]); Serial.print("  ");
+//    Serial.print("Raw_gyro_X: "); Serial.print(gyro[0]); Serial.print("  ");
+//    Serial.print("Raw_gyro_Y: "); Serial.print(gyro[1]); Serial.print("  ");
+//    Serial.print("Raw_gyro_z: "); Serial.print(gyro[2]); Serial.print("  ");
+//    Serial.print("Raw_acc_X_f: "); Serial.print(filter_acc[0]); Serial.print("  ");
+//    Serial.print("Raw_acc_Y_f: "); Serial.print(filter_acc[1]); Serial.print("  ");
+//    Serial.print("Raw_acc_z_f: "); Serial.print(filter_acc[2]); Serial.print("  ");
+//    Serial.print("Raw_gyro_X_f: "); Serial.print(filter_gyro[0]); Serial.print("  ");
+//    Serial.print("Raw_gyro_Y_f: "); Serial.print(filter_gyro[1]); Serial.print("  ");
+//    Serial.print("Raw_gyro_z_f: "); Serial.print(filter_gyro[2]); Serial.print("  ");
     //Serial.println("uT");
     
     final_pitch = ComplementaryFilter_pitch(filter_acc[0],filter_acc[1],filter_acc[2],filter_gyro[0],filter_gyro[1],filter_gyro[2]);
     final_roll = ComplementaryFilter_roll(filter_acc[0],filter_acc[1],filter_acc[2],filter_gyro[0],filter_gyro[1],filter_gyro[2]);
  
- //Serial.println(final_accumulative_value);
- Serial.print("final: "); Serial.print(final_accumulative_value); Serial.print("  ");
- Serial.print("Pitch: "); Serial.print(final_pitch); Serial.print("  ");
- Serial.print("roll: "); Serial.print(final_roll); Serial.print("  ");
- Serial.println(" ");
+// Serial.println(final_accumulative_value);
+//Serial.print("final: "); Serial.print(final_accumulative_value);
+ //Serial.print("Pitch: "); Serial.print(final_pitch); Serial.print("  ");
+ //Serial.print("roll: "); Serial.print(final_roll); Serial.print("  ");
+ //Serial.println(" ");
     //fall_detection(final_accumulative_value,final_roll,final_pitch);
       
 }
@@ -227,20 +247,30 @@ bool check_direction(float angle)
 void fall_detection()
 {
   //Serial.println(fsm_state);
-  if (final_accumulative_value >= 250 && fsm_state =="state_0")
+  float check_value =get_basic();
+  if (check_value >= 180 && fsm_state =="state_0")
   {
     Serial.println("state_1");
     fsm_state = "state_1";
     counter=0;
+    a[0]=0; 
     do{
+      float sum =0.0;
       get_MPU_data();
-      Serial.println(final_roll);
+//      for(int i=1; i<=99; i++)
+//        {
+//          a[i] = get_basic();
+//          float sum =a[i]+a[i-1];
+//        }
+//      float average = sum/99;
+      Serial.println(check_value);
+   
     }
     while(counter <= 500);   
       
-    Serial.println(final_roll);
+    //Serial.println(final_roll);
     //Serial.println(unsigned(roll_angle));
-    Serial.println(final_pitch);
+    //Serial.println(final_pitch);
   }
   if ((fsm_state == "state_1") && ((angle_threshold) < final_roll))
   {
@@ -270,6 +300,7 @@ void fall_detection()
     else
     {
       Serial.println("left fall");
+      
     }
   }
     if ((fsm_state == "state_1") && ((angle_threshold_n) > final_roll))
@@ -312,7 +343,8 @@ void fall_detection()
 
 void loop()
 {
-  get_MPU_data();
-  //fall_detection();
+  //get_basic();
+  //delay(1000);
+  fall_detection();
   
 }
