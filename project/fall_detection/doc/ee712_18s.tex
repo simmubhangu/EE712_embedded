@@ -5,6 +5,7 @@
 \usepackage[centertags]{amsmath}
 \usepackage{amsfonts,amssymb,amsthm}
 \usepackage{tikz}
+\usepackage{iitbieortitle}
 \usetikzlibrary{positioning}
 \usetikzlibrary{shapes}
 \usepackage{graphicx}
@@ -15,11 +16,19 @@
 \setcitestyle{square}
 \renewcommand{\baselinestretch}{1.2} %line spacing
 \marginsize{1.2in}{1.2in}{1in}{1in}  %left right top bottom
-\title{Human Fall Detection Using Inertial Sensors}
-\author{Simranjeet Singh (183076005), Sonali Shukla (184070014) \& Niraj N Sharma (184077001)}
+
+% Title Page
 \begin{document}
+\pagenumbering{roman}
+\pagestyle{plain}
+\def\title{Human Fall Detection}
+\def\what{EE712 Embedded System Design}
+\def\who{Simranjeet Singh (183076005) (183076005@iitb.ac.in) \\ Sonali Shukla (184070014) (184070014@iitb.ac.in) \\ Niraj N Sharma (184077001) (nirajns@iitb.ac.in) \\ Group 20}
+\def\guide{Prof.~P.~C.~Pandey \& Prof.~D.~K.~Sharma}
+\titlpage
+\newpage
+
 \pagenumbering{arabic}
-\maketitle
 \section*{Abstract}
 In this project we developed a wearable human fall-detection system
 intended for the elderly. On detecting a fall, the system sends an
@@ -54,9 +63,6 @@ readings from a tri-axial accelerometer cannot be used directly as they
 tend to be very noisy and are also combined with the acceleration due to
 the earth's gravity.
 
-{\color{red} PCP's student's mtech thesis} used a LPF to filter the
-accelerometer readings with a cut-off frequency of {\color{red} Hz}.
-
 \cite{Wu2015} uses a threshold based technique combining readings from
 the accelerometer and gyroscope to detect the fall-event.
 
@@ -75,7 +81,9 @@ gyroscope indicates that the orientation of the device has changed by at least
 60 degrees.
 
 \section{Hardware Setup}
-Our hardware setup consists of four major components:
+Our hardware setup consists of four major components as show in
+figure~\ref{fig:bd} on page~\pageref{fig:bd}.
+
 \begin{description}
    \item [GY-87] The GY-87 also known as the MPU-60X0 integrates a
       tri-axial accelerometer and gyroscope with on-chip ADCs to deliver
@@ -101,7 +109,7 @@ Our hardware setup consists of four major components:
     \centering
     \includegraphics[width=\linewidth]{BD.pdf}
     \caption{Block Diagram}
-    \label{fig:blk_diagram}
+    \label{fig:bd}
 \end{figure}
 
 
@@ -149,6 +157,10 @@ recorded:
    \end{tabular}
 \end{center}
 
+\subsubsection{Pendulum-mounted Measurements}
+We attached the GY-87 to the arm of a pendulum and swung it, while measuring
+the accelerometer output. As expected the output recorded its lowest value at
+the point of the furthest swing, and was maximum near its rest position. 
 
 \subsection{Power Supply}
 During development the assembly was powered using the micro-usb connection to
@@ -166,70 +178,92 @@ lists the different devices and their peak current consumption:
       LEDs (4) & $16.0$ & \\
       HC-05 & $30.0$ \\
       \hline
-      Total & $53.3$ \\
+      Total & $52.3$ \\
       \hline
    \end{tabular}
 \end{center}
 
-\noindent So, the device can draw a peak current of $53.3$ mA. At this
+\noindent The device can draw a peak current of $52.3$ mA. At this
 consumption, a 9V cell will last for about $7.50$ hours.
 
 \section{Software}
-Algorithm.
-Flow diagram: sampling, lpf, hpf, complementary.
+The figure~\ref{fig:sw_flow} on page~\pageref{fig:sw_flow} describes the
+processing which occurs with the accelerometer and gyroscope sensor readings
+from the GY-87. The input from the two sensors are received as a set of six,
+16-bit values, one for each axis of each sensor. 
 
-\section{Investigations}
+The accelerometer values are taken through a LPF, while the gyroscope values
+are taken through a HPF. These filtered values are then combined using a
+complementary filter which essentially does a weighted sum of the sensor
+values.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\linewidth]{SW_Flow.pdf}
+    \caption{Software Flow}
+    \label{fig:sw_flow}
+\end{figure}
 
 
-\section{Test Procedure}
+\section{Test Procedure and Results}
 We tested the device both with normal movements, such as walking, sitting,
 jumping and sleeping. The tests also included transitions between these
 movements as the transition points were more interesting from our
-application's point-of-view. The following are plots of {\color{red}
-something, something and something-else} for each movement.
+application's point-of-view. The following are plots of everyday actions
+like jogging, walking, sitting, sleeping.
 
-\noindent Wearer walked at a normal pace during this test. 
+In all these plots, the blue plot indicates filtered accelero output.
+The red and green plots indicate roll and pitch.
+
+\noindent In the walk test, the wearer walked at a normal pace during this
+test. The plot is on figure~\ref{fig:walk} on page~\pageref{fig:walk}.
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{I2C_Timing.pdf}
-    \caption{Plot: Walking}
-    \label{fig:walking}
+    \includegraphics[width=0.75\linewidth]{walk.png}
+    \caption{Walking}
+    \label{fig:walk}
 \end{figure}
 
-\noindent This test was conducted when the wearer sat into a short chair from a
-standing position and stood up again.
+\noindent The sit-stand test was conducted when the wearer sat into a short chair from a
+standing position and stood up again. The plot is on figure~\ref{fig:ss} on page
+~\pageref{fig:ss}.
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{I2C_Timing.pdf}
-    \caption{Plot: Sitting-Standing}
-    \label{fig:sitting_standing}
+    \includegraphics[width=0.75\linewidth]{sit-stand.png}
+    \caption{Sitting-Standing}
+    \label{fig:ss}
 \end{figure}
 
-\noindent This test was conducted when the wearer was jumping in place. This
+\noindent The jump test was conducted when the wearer was jumping in place. This
 action most closely resembles a fall, and the test was conducted to ensure our
-thresholding was correct.
+thresholding was correct. The plot is on figure~\ref{fig:jumping} on page
+~\pageref{fig:jumping}.
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{I2C_Timing.pdf}
-    \caption{Plot: Jumping}
+    \includegraphics[width=0.75\linewidth]{jump.png}
+    \caption{Jumping}
     \label{fig:jumping}
 \end{figure}
 
-\noindent This test was conducted when the wearer was lying down and suddenly
-got up.
+\noindent The sleep-and-walk test was conducted when the wearer was lying down and suddenly
+got up. The plot is on figure~\ref{fig:sleeping} on page ~\pageref{fig:sleeping}.
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{I2C_Timing.pdf}
-    \caption{Plot: Sleeping-Waking}
+    \includegraphics[width=0.75\linewidth]{sleep.png}
+    \caption{Sleeping-Waking}
     \label{fig:sleeping}
 \end{figure}
 
-\section{Test Results}
-with plots and tables (appendices, if necessary).
-
 \section{Conclusion}
-suggestions for further improvement.
+We have implemented a device which detects if the wearer has had a fall, and
+classifies the fall direction -- front, back, right or left. This information
+is communicated via Bluetooth to the wearer's smartphone.
 
+One limitation of this device is that orientation of the device has to be
+fixed with respect to the wearer.  A future improvement could be for the
+device to automatically calibrate its current orientation with respect to a
+preset reference. This would allow the wearer greater flexibility in device
+placement.
 
 \bibliographystyle{ieeetr}
 \bibliography{reference-papers}
