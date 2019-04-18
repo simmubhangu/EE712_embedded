@@ -120,7 +120,9 @@ figure~\ref{fig:bd} on page~\pageref{fig:bd}.
 
 \subsection{I2C and UART Integration}
 The I2C is used to integrate the GY-87 with the ATmega328P. The GY-87 behaves
-as a slave. 
+as a slave, while the ATmega328P serves as the master. Figure
+~\ref{fig:i2c_timing} on page~\pageref{fig:i2c_timing} describes a N-bit data
+transfer on I2C.
 
 \begin{figure}[htb]
     \centering
@@ -130,7 +132,8 @@ as a slave.
 \end{figure}
 
 \noindent The HC05 communicates with via a UART interface which is run at a
-baud rate of 9600 baud.
+baud rate of 9600 baud. Figure ~\ref{fig:uart_timing} on
+page~\pageref{fig:uart_timing} describes a data transfer on the UART.
 
 \begin{figure}[htb]
     \centering
@@ -152,7 +155,16 @@ experiment was repeated aligning each axis with g.
 \subsubsection{Pendulum-mounted Measurements}
 We attached the GY-87 to the arm of a pendulum and swung it, while measuring
 the accelerometer output. As expected the output recorded its lowest value at
-the point of the furthest swing, and was maximum near its rest position. 
+the point of the furthest swing, and was maximum near its rest position. The
+figure~\ref{fig:pendulum} on page~\pageref{fig:pendulum} was our lab setup for
+the experiment. 
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.5\linewidth]{pendulum.jpg}
+    \caption{Pendulum Experiment Assembly}
+    \label{fig:pendulum}
+\end{figure}
 
 \subsection{Power Supply}
 During development the assembly was powered using the micro-usb connection to
