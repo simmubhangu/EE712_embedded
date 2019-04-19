@@ -9,6 +9,8 @@
 \usetikzlibrary{positioning}
 \usetikzlibrary{shapes}
 \usepackage{graphicx}
+\usepackage{float}      % place multiple floats in one float
+\usepackage{subfig}     % place multiple figs in one figure
 \usepackage{placeins}   % to stop floats from floating
 \usepackage[numbers]{natbib}    % so that natbib does not need author-year only numbers
 \usepackage{wrapfig}
@@ -221,42 +223,39 @@ output.  The red and green plots indicate roll and pitch.
 
 \noindent In the walk test, the wearer walked at a normal pace during this
 test. The plot is on figure~\ref{fig:walk} on page~\pageref{fig:walk}.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.7\linewidth]{walk.png}
-    \caption{Walking}
-    \label{fig:walk}
+
+\begin{figure}[!ht]
+   \subfloat[Walking \label{fig:walk}]{
+      \includegraphics[width=0.45\linewidth]{walk.png}
+   }
+   \subfloat[Sitting-Standing \label{fig:ss}]{
+      \includegraphics[width=0.45\linewidth]{sit-stand.png}
+   }
+   \caption{Activity Plots -- Walking and Sitting-Standing}
 \end{figure}
 
 \noindent The sit-stand test was conducted when the wearer sat into a short chair from a
 standing position and stood up again. The plot is on figure~\ref{fig:ss} on page
 ~\pageref{fig:ss}.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.7\linewidth]{sit-stand.png}
-    \caption{Sitting-Standing}
-    \label{fig:ss}
-\end{figure}
 
 \noindent The jump test was conducted when the wearer was jumping in place. This
 action most closely resembles a fall, and the test was conducted to ensure our
-thresholding was correct. The plot is on figure~\ref{fig:jumping} on page
-~\pageref{fig:jumping}.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.70\linewidth]{jump.png}
-    \caption{Jumping}
-    \label{fig:jumping}
+thresholding was correct. The plot is on figure~\ref{fig:jump} on page
+~\pageref{fig:jump}.
+\begin{figure}[!ht]
+   \subfloat[Jumping \label{fig:jump}]{
+      \includegraphics[width=0.45\linewidth]{jump.png}
+   }
+   \subfloat[Sleeping \label{fig:sleep}]{
+      \includegraphics[width=0.45\linewidth]{sleep.png}
+   }
+   \caption{Activity Plots -- Jumping and Sleeping}
 \end{figure}
 
 \noindent The sleep-and-walk test was conducted when the wearer was lying down and suddenly
-got up. The plot is on figure~\ref{fig:sleeping} on page ~\pageref{fig:sleeping}.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.7\linewidth]{sleep.png}
-    \caption{Sleeping-Waking}
-    \label{fig:sleeping}
-\end{figure}
+got up. The plot is on figure~\ref{fig:sleep} on page
+~\pageref{fig:sleep}. The sleep test also checks that just rotation of the
+device does not cause a false detection.
 
 \section{Conclusion}
 We have implemented a device which detects if the wearer has had a fall, and
