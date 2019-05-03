@@ -5,12 +5,11 @@
 \usepackage[centertags]{amsmath}
 \usepackage{amsfonts,amssymb,amsthm}
 \usepackage{tikz}
+\usepackage[T1]{fontenc}
 \usepackage{iitbieortitle}
 \usetikzlibrary{positioning}
 \usetikzlibrary{shapes}
 \usepackage{graphicx}
-\usepackage{float}      % place multiple floats in one float
-\usepackage{subfig}     % place multiple figs in one figure
 \usepackage{placeins}   % to stop floats from floating
 \usepackage[numbers]{natbib}    % so that natbib does not need author-year only numbers
 \usepackage{wrapfig}
@@ -25,9 +24,9 @@
 \pagestyle{plain}
 \def\title{Human Fall Detection}
 \def\what{EE712 Embedded System Design}
-\def\who{Simranjeet Singh (183076005) [183076005@iitb.ac.in] \\
-Sonali Shukla (184070014) [184070014@iitb.ac.in] \\
-Niraj N Sharma (184077001) [nirajns@iitb.ac.in] \\
+\def\who{Simranjeet Singh (183076005) <183076005@iitb.ac.in> \\
+Sonali Shukla (184070014) <184070014@iitb.ac.in> \\
+Niraj N Sharma (184077001) <nirajns@iitb.ac.in> \\
 Group 20}
 \def\guide{Prof.~P.~C.~Pandey \& Prof.~D.~K.~Sharma}
 \titlpage
@@ -35,11 +34,11 @@ Group 20}
 
 \pagenumbering{arabic}
 \section*{Abstract}
-In this project we developed a wearable human fall-detection system
+In this project, we developed a wearable human fall-detection system
 intended for the elderly. On detecting a fall, the system sends an
 emergency SMS using the wearer's bluetooth enabled smartphone to a
 caregiver. The system uses a GY-87 inertial sensor integrated with an
-Arduino Nano micro-controller.
+Arduino Nano micro-controller. The main objective of the project was to developed a low cost and small size wearable fall detection system with accurate detection of fall and direction of fall.
 
 \section{Problem Statement}
 Falls are a significant source of injury for the elderly. This wearable
@@ -196,13 +195,18 @@ consumption, a 9V cell will last for about $7.50$ hours.
 The figure~\ref{fig:sw_flow} on page~\pageref{fig:sw_flow} describes the
 processing which occurs with the accelerometer and gyroscope sensor readings
 from the GY-87. The input from the two sensors are received as a set of six,
-16-bit values, one for each axis of each sensor. 
+16-bit values, one for each axis of each sensor. \\
+
+To detect the peak value of that trigger the further algorithm is the magnitude of the accelerometer data on all direction(x-axis, y-axis, x-axis)
+\begin{equation}
+	\label{eq:mag}
+	Magnitude = \sqrt{x^{2} + y^{2} + z^{2}}
+\end{equation}
+The value of magnitude will trigger the further code to check the direction on which side actual fall has happen. The threshold for magnitude peak we chosen was 180. If the $magnitute \geq 180$ then roll and pitch calculated from the complementary filter are used to detect the fall direction. The roll and pitch value is changing from 90. We have chosen the threshold as 60.
 
 \noindent The accelerometer values are taken through a LPF, while the
 gyroscope values are taken through a HPF. These filtered values are then
-combined using a complementary filter which essentially does a weighted sum of
-the sensor values.
-
+combined using a complementary filter which essentially does a weighted sum of the sensor values.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\linewidth]{SW_Flow.pdf}
@@ -210,6 +214,15 @@ the sensor values.
     \label{fig:sw_flow}
 \end{figure}
 
+\section{Final Assembly}
+The PCB which integrated the GY87, the Arduino Nano and the HC-05 bluetooth module have been housed in a custom-made acrylic box with a separate compartments for the battery. Cutouts in the box allows us to access the switch and the USB debug interface. This box was attached to a frame which served as the human torso. Dropping the frame from a standing position would mimic a fall.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{Box.png}
+    \caption{Device Assembly}
+    \label{fig:box}
+\end{figure}
 
 \section{Test Procedure and Results}
 We tested the device both with normal movements, such as walking, sitting,
@@ -218,44 +231,42 @@ movements as the transition points were more interesting from our
 application's point-of-view. The following are plots of everyday actions
 like jogging, walking, sitting, sleeping.
 
-\noindent In all these plots, the blue plot indicates filtered accelero
-output.  The red and green plots indicate roll and pitch.
+\noindent In all these plots, the blue plot indicates filtered accelerometer
+output. The red and green plots indicate roll and pitch.
 
 \noindent In the walk test, the wearer walked at a normal pace during this
 test. The plot is on figure~\ref{fig:walk} on page~\pageref{fig:walk}.
-
-\begin{figure}[!ht]
-   \subfloat[Walking \label{fig:walk}]{
-      \includegraphics[width=0.45\linewidth]{walk.png}
-   }
-   \subfloat[Sitting-Standing \label{fig:ss}]{
-      \includegraphics[width=0.45\linewidth]{sit-stand.png}
-   }
-   \caption{Activity Plots -- Walking and Sitting-Standing}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{walk.png}
+    \caption{Walking}
+    \label{fig:walk}
 \end{figure}
 
-\noindent The sit-stand test was conducted when the wearer sat into a short chair from a
-standing position and stood up again. The plot is on figure~\ref{fig:ss} on page
-~\pageref{fig:ss}.
+\noindent The sit-stand test was conducted when the wearer sat into a short chair from a standing position and stood up again. The plot is on figure~\ref{fig:ss} on page~\pageref{fig:ss}.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{sit-stand.png}
+    \caption{Sitting-Standing}
+    \label{fig:ss}
+\end{figure}
 
-\noindent The jump test was conducted when the wearer was jumping in place. This
-action most closely resembles a fall, and the test was conducted to ensure our
-thresholding was correct. The plot is on figure~\ref{fig:jump} on page
-~\pageref{fig:jump}.
-\begin{figure}[!ht]
-   \subfloat[Jumping \label{fig:jump}]{
-      \includegraphics[width=0.45\linewidth]{jump.png}
-   }
-   \subfloat[Sleeping \label{fig:sleep}]{
-      \includegraphics[width=0.45\linewidth]{sleep.png}
-   }
-   \caption{Activity Plots -- Jumping and Sleeping}
+\noindent The jump test was conducted when the wearer was jumping in place. This action most closely resembles a fall, and the test was conducted to ensure our thresholds was correct. The plot is on figure~\ref{fig:jumping} on page ~\pageref{fig:jumping}.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.70\linewidth]{jump.png}
+    \caption{Jumping}
+    \label{fig:jumping}
 \end{figure}
 
 \noindent The sleep-and-walk test was conducted when the wearer was lying down and suddenly
-got up. The plot is on figure~\ref{fig:sleep} on page
-~\pageref{fig:sleep}. The sleep test also checks that just rotation of the
-device does not cause a false detection.
+got up. The plot is on figure~\ref{fig:sleeping} on page ~\pageref{fig:sleeping}.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{sleep.png}
+    \caption{Sleeping-Waking}
+    \label{fig:sleeping}
+\end{figure}
 
 \section{Conclusion}
 We have implemented a device which detects if the wearer has had a fall, and
@@ -271,3 +282,4 @@ placement.
 \bibliographystyle{ieeetr}
 \bibliography{reference-papers}
 \end{document}
+
